@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum ProductType {
+  GAS
+  WATER
+}
+
+enum TransactionType {
+  IN
+  OUT
+}
+
+enum Role {
+  ADMIN
+  EMPLOYEE
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique // Usado como login
+  password  String
+  role      Role     @default(EMPLOYEE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id           String        @id @default(uuid())
+  name         String
+  type         ProductType
+  currentStock Int           @default(0)
+  transactions Transaction[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Transaction {
+  id            String          @id @default(uuid())
+  productId     String
+  product       Product         @relation(fields: [productId], references: [id])
+  type          TransactionType
+  quantity      Int
+  
+  // Campos de Venda (Saída)
+  price         Float?          // Valor total cobrado na venda
+  paymentMethod String?         // Forma de pagamento (PIX, CASH, CARD...)
+
+  // Campos de Entrada (Notas e Boletos)
+  invoiceNumber String?
+  hasBoleto     Boolean?        @default(false)
+  isBoletoPaid  Boolean?        @default(false)
+  
+  createdAt     DateTime        @default(now())
+  bill          Bill?
+}
+
+model Bill {
+  id            String       @id @default(uuid())
+  title         String
+  amount        Float?
+  dueDate       DateTime
+  isPaid        Boolean      @default(false)
+  isRecurring   Boolean      @default(false)
+  
+  transactionId String?      @unique
+  transaction   Transaction? @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model DailyClosing {
+  id           String   @id @default(uuid())
+  date         DateTime @default(now())
+  initialStock Int      @default(0)
+  finalStock   Int      @default(0)
+  totalSales   Int      @default(0)
+  
+  // Financeiro
+  totalRevenue Float    @default(0)
+  pixTotal     Float    @default(0)
+  cashTotal    Float    @default(0)
+  cardTotal    Float    @default(0)
+
+  isClosed     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

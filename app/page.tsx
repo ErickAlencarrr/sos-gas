@@ -1,65 +1,549 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { 
+  PlusCircle, 
+  MinusCircle, 
+  Wallet, 
+  X, 
+  Flame, 
+  Droplets,
+  TrendingUp,
+  PackageOpen,
+  Receipt,
+  CheckCircle2,
+  FileText,
+  Banknote,
+  Smartphone,
+  CreditCard,
+  Check
+} from "lucide-react";
+
+type Product = {
+  id: string;
+  name: string;
+  type: "GAS" | "WATER";
+  currentStock: number;
+};
 
 export default function Home() {
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === "ADMIN";
+
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalType, setModalType] = useState<"IN" | "OUT">("OUT");
+  const [selectedProduct, setSelectedProduct] = useState("");
+  const [quantity, setQuantity] = useState(1);
+  
+  // Novos campos de Entrada
+  const [invoiceNumber, setInvoiceNumber] = useState("");
+  const [hasBoleto, setHasBoleto] = useState(false);
+  const [isBoletoPaid, setIsBoletoPaid] = useState(false);
+  const [boletoAmount, setBoletoAmount] = useState("");
+  const [boletoDueDate, setBoletoDueDate] = useState("");
+
+  // Campos de Venda (Saída)
+  const [price, setPrice] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("CASH");
+  
+  // Resumo de Hoje e Fechamento
+  const [todaySummary, setTodaySummary] = useState<any>(null);
+  const [isClosingModalOpen, setIsClosingModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const fetchSummary = async () => {
+    try {
+      const res = await fetch("/api/closing/summary");
+      if(res.ok) setTodaySummary(await res.json());
+    } catch(e) {}
+  };
+
+  const fetchProducts = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/products");
+      if(res.ok) {
+        const data = await res.json();
+        setProducts(data);
+      }
+      fetchSummary();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const openModal = (type: "IN" | "OUT") => {
+    setModalType(type);
+    setQuantity(1);
+    setInvoiceNumber("");
+    setHasBoleto(false);
+    setIsBoletoPaid(false);
+    setBoletoAmount("");
+    setBoletoDueDate("");
+    setPrice("");
+    setPaymentMethod("CASH");
+    if (products.length > 0) setSelectedProduct(products[0].id);
+    setIsModalOpen(true);
+  };
+
+  const handleTransaction = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedProduct || quantity <= 0) return;
+    
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        productId: selectedProduct,
+        type: modalType,
+        quantity: Number(quantity),
+        ...(modalType === 'IN' && {
+          invoiceNumber,
+          hasBoleto,
+          isBoletoPaid: hasBoleto ? isBoletoPaid : false,
+          boletoAmount,
+          boletoDueDate
+        }),
+        ...(modalType === 'OUT' && {
+          price: price,
+          paymentMethod: paymentMethod
+        })
+      };
+
+      const res = await fetch("/api/transactions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if(res.ok) {
+        setIsModalOpen(false);
+        fetchProducts();
+      } else {
+        alert("Erro ao salvar transação");
+      }
+    } catch (error) {
+      alert("Erro de conexão");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const confirmClosing = async () => {
+    try {
+      setIsSubmitting(true);
+      const res = await fetch("/api/closing", { method: "POST" });
+      if(res.ok) {
+        alert("Caixa fechado com sucesso!");
+        setIsClosingModalOpen(false);
+        fetchProducts();
+      } else {
+        alert("Erro ao fechar caixa");
+      }
+    } catch (error) {
+      alert("Erro de conexão");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="p-5 md:p-8 font-sans pb-28 md:pb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        {/* Coluna Esquerda: Estoque & Resumo */}
+        <div className="lg:col-span-8">
+          <header className="mb-6 flex justify-between items-center md:hidden">
+             <div className="flex items-center gap-3">
+               <div className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-sm">
+                 <img 
+                   src="/logo.png" 
+                   alt="Logo" 
+                   className="w-full h-full object-cover"
+                   onError={(e) => {
+                     e.currentTarget.style.display = 'none';
+                     e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                   }}
+                 />
+                 <Flame className="w-6 h-6 text-brand-500 hidden" />
+               </div>
+               <h2 className="text-2xl font-black text-slate-800 dark:text-white">SOS Gás</h2>
+             </div>
+          </header>
+
+          {/* Resumo do Dia (Visível apenas se isAdmin ou se quiser que funcionário também veja) */}
+          {todaySummary && (
+            <section className="mb-8">
+              <h2 className="text-sm font-bold text-slate-400 dark:text-slate-500 mb-4 uppercase tracking-widest flex items-center gap-2">
+                 Resumo do Caixa (Hoje)
+              </h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-brand-50 dark:bg-brand-900/20 p-4 rounded-3xl border border-brand-100 dark:border-brand-800/30">
+                  <span className="text-[10px] font-black text-brand-600 dark:text-brand-400 uppercase">Faturamento</span>
+                  <p className="text-xl font-black text-slate-800 dark:text-white mt-1">R$ {todaySummary.totalRevenue.toFixed(2).replace('.',',')}</p>
+                </div>
+                <div className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-100 dark:border-slate-800 flex flex-col justify-between">
+                  <div className="flex items-center gap-1 text-slate-400 mb-1">
+                    <Smartphone className="w-4 h-4"/> <span className="text-[10px] font-black uppercase">PIX</span>
+                  </div>
+                  <p className="text-lg font-black text-slate-800 dark:text-white">R$ {todaySummary.pixTotal.toFixed(2).replace('.',',')}</p>
+                </div>
+                <div className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-100 dark:border-slate-800 flex flex-col justify-between">
+                  <div className="flex items-center gap-1 text-slate-400 mb-1">
+                    <Banknote className="w-4 h-4"/> <span className="text-[10px] font-black uppercase">Dinheiro</span>
+                  </div>
+                  <p className="text-lg font-black text-slate-800 dark:text-white">R$ {todaySummary.cashTotal.toFixed(2).replace('.',',')}</p>
+                </div>
+                <div className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-100 dark:border-slate-800 flex flex-col justify-between">
+                  <div className="flex items-center gap-1 text-slate-400 mb-1">
+                    <CreditCard className="w-4 h-4"/> <span className="text-[10px] font-black uppercase">Cartão</span>
+                  </div>
+                  <p className="text-lg font-black text-slate-800 dark:text-white">R$ {todaySummary.cardTotal.toFixed(2).replace('.',',')}</p>
+                </div>
+              </div>
+            </section>
+          )}
+
+          <div className="hidden md:block mb-6">
+            <h2 className="text-2xl font-black text-slate-800 dark:text-white flex items-center gap-2">
+              <PackageOpen className="w-6 h-6 text-brand-500" /> Visão de Estoque
+            </h2>
+          </div>
+
+          <section className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+            {isLoading ? (
+              <div className="col-span-full text-center text-slate-500 dark:text-slate-400 py-12 font-medium animate-pulse bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800">
+                Sincronizando estoque...
+              </div>
+            ) : products.length === 0 ? (
+              <div className="col-span-full text-center text-slate-400 py-12 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 flex flex-col items-center">
+                <PackageOpen className="w-12 h-12 mb-3 opacity-50" />
+                <span>Nenhum produto cadastrado.</span>
+              </div>
+            ) : products.map((product) => (
+              <div 
+                key={product.id} 
+                className="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-3xl shadow-sm hover:shadow-md transition-shadow border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center text-center relative overflow-hidden"
+              >
+                <div className="absolute -right-4 -bottom-4 opacity-[0.03] dark:opacity-5 pointer-events-none">
+                  {product.type === 'GAS' ? <Flame className="w-32 h-32" /> : <Droplets className="w-32 h-32" />}
+                </div>
+                
+                <div className="flex items-center gap-1.5 mb-3 md:mb-4 z-10">
+                  {product.type === 'GAS' ? (
+                    <Flame className="w-4 h-4 md:w-5 md:h-5 text-brand-500" />
+                  ) : (
+                    <Droplets className="w-4 h-4 md:w-5 md:h-5 text-blue-400" />
+                  )}
+                  <span className="text-xs md:text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{product.name}</span>
+                </div>
+                
+                <span className={`text-6xl md:text-7xl font-black z-10 tracking-tighter ${
+                  product.currentStock <= 5 
+                    ? 'text-red-500 dark:text-red-400' 
+                    : 'text-slate-800 dark:text-white'
+                }`}>
+                  {product.currentStock}
+                </span>
+                {product.currentStock <= 5 && (
+                  <span className="text-[10px] md:text-xs text-red-500 font-bold mt-2 uppercase animate-pulse bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-full">
+                    Estoque Baixo
+                  </span>
+                )}
+              </div>
+            ))}
+          </section>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* Coluna Direita: Ações */}
+        <div className="lg:col-span-4">
+          <div className="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 h-full">
+            <h2 className="text-sm font-bold text-slate-400 dark:text-slate-500 mb-6 uppercase tracking-widest flex items-center gap-2">
+               Ações Rápidas
+            </h2>
+            
+            <div className="space-y-4 md:space-y-5">
+              <button 
+                onClick={() => openModal("OUT")} 
+                className="w-full bg-brand-600 hover:bg-brand-700 active:bg-brand-800 dark:bg-brand-500 dark:hover:bg-brand-600 text-white p-5 md:p-6 rounded-2xl md:rounded-3xl shadow-lg shadow-brand-500/25 flex items-center justify-center space-x-3 transition-all hover:-translate-y-1"
+              >
+                <TrendingUp className="w-7 h-7 stroke-[2.5]" />
+                <span className="text-2xl md:text-3xl font-black tracking-wide">Vender</span>
+              </button>
+              
+              {isAdmin && (
+                <button 
+                  onClick={() => openModal("IN")} 
+                  className="w-full bg-slate-900 hover:bg-black active:bg-black dark:bg-slate-800 dark:hover:bg-slate-700 text-white p-5 md:p-6 rounded-2xl md:rounded-3xl shadow-md flex items-center justify-center space-x-3 transition-all hover:-translate-y-1"
+                >
+                  <PlusCircle className="w-7 h-7 stroke-[2.5]" />
+                  <span className="text-xl md:text-2xl font-black tracking-wide">Receber Carga</span>
+                </button>
+              )}
+
+              <div className="pt-4 pb-2">
+                <div className="h-px bg-slate-200 dark:bg-slate-800 w-full rounded-full"></div>
+              </div>
+
+              {isAdmin && (
+                <button 
+                  onClick={() => setIsClosingModalOpen(true)} 
+                  className="w-full bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 p-4 md:p-5 rounded-2xl md:rounded-3xl flex items-center justify-center space-x-3 transition-all"
+                >
+                  <Wallet className="w-6 h-6 stroke-2 text-brand-500" />
+                  <span className="text-lg md:text-xl font-bold tracking-wide">Fechar Caixa</span>
+                </button>
+              )}
+            </div>
+          </div>
         </div>
-      </main>
-    </div>
+      </div>
+
+      {/* MODAL BOTTOM SHEET DE VENDAS/ENTRADAS */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+          <div className="absolute inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm transition-opacity" onClick={() => setIsModalOpen(false)}></div>
+          
+          <div className="bg-white dark:bg-slate-950 w-full md:max-w-lg md:rounded-3xl rounded-t-[2.5rem] p-6 md:p-8 pb-12 shadow-2xl relative z-10 border border-slate-100 dark:border-slate-800 transition-all max-h-[90vh] overflow-y-auto">
+            <div className="w-12 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mb-6 md:hidden shrink-0"></div>
+            
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+                {modalType === "OUT" ? <TrendingUp className="w-8 h-8 text-brand-500" /> : <PlusCircle className="w-8 h-8 text-slate-800 dark:text-white" />}
+                {modalType === "OUT" ? "Registrar Venda" : "Nova Carga"}
+              </h3>
+              <button onClick={() => setIsModalOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-900 rounded-full text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800 shrink-0">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleTransaction} className="space-y-6">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Produto</label>
+                <select 
+                  className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-lg font-medium text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-brand-500"
+                  value={selectedProduct}
+                  onChange={(e) => setSelectedProduct(e.target.value)}
+                  required
+                >
+                  {products.length === 0 && <option value="">Sem produtos cadastrados</option>}
+                  {products.map(p => (
+                    <option key={p.id} value={p.id}>{p.name} (Estoque: {p.currentStock})</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Quantidade</label>
+                <div className="flex items-center gap-4">
+                  <button 
+                    type="button" 
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))} 
+                    className="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center bg-slate-100 dark:bg-slate-900 rounded-2xl text-slate-600 dark:text-slate-300 active:scale-95 transition-transform shrink-0"
+                  >
+                    <MinusCircle className="w-8 h-8" />
+                  </button>
+                  <input 
+                    type="number" 
+                    min="1" 
+                    className="flex-1 w-full h-14 md:h-16 text-center bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-3xl font-black text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-brand-500 m-0 p-0"
+                    value={quantity}
+                    onChange={(e) => setQuantity(Number(e.target.value))}
+                    required
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => setQuantity(quantity + 1)} 
+                    className="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center bg-slate-100 dark:bg-slate-900 rounded-2xl text-slate-600 dark:text-slate-300 active:scale-95 transition-transform shrink-0"
+                  >
+                    <PlusCircle className="w-8 h-8" />
+                  </button>
+                </div>
+              </div>
+
+              {/* OPÇÕES EXTRAS PARA VENDA (OUT) */}
+              {modalType === "OUT" && (
+                <div className="bg-brand-50 dark:bg-brand-900/20 p-4 md:p-5 rounded-3xl border border-brand-100 dark:border-brand-800/30 space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">Valor Total Cobrado (R$)</label>
+                    <input 
+                      type="number" 
+                      step="0.01" 
+                      placeholder="Ex: 110.00"
+                      className="w-full p-4 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-xl font-bold outline-none focus:ring-2 focus:ring-brand-500" 
+                      value={price} 
+                      onChange={(e) => setPrice(e.target.value)} 
+                      required 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-2">Forma de Pagamento</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button type="button" onClick={() => setPaymentMethod('CASH')} className={`flex flex-col items-center gap-1 p-3 rounded-2xl border transition-all ${paymentMethod === 'CASH' ? 'bg-brand-600 text-white border-brand-600' : 'bg-white dark:bg-slate-950 text-slate-500 border-slate-200 dark:border-slate-800'}`}>
+                        <Banknote className="w-6 h-6" /> <span className="text-[10px] font-black uppercase tracking-widest">Dinheiro</span>
+                      </button>
+                      <button type="button" onClick={() => setPaymentMethod('PIX')} className={`flex flex-col items-center gap-1 p-3 rounded-2xl border transition-all ${paymentMethod === 'PIX' ? 'bg-teal-500 text-white border-teal-500' : 'bg-white dark:bg-slate-950 text-slate-500 border-slate-200 dark:border-slate-800'}`}>
+                        <Smartphone className="w-6 h-6" /> <span className="text-[10px] font-black uppercase tracking-widest">PIX</span>
+                      </button>
+                      <button type="button" onClick={() => setPaymentMethod('CARD')} className={`flex flex-col items-center gap-1 p-3 rounded-2xl border transition-all ${paymentMethod === 'CARD' ? 'bg-purple-500 text-white border-purple-500' : 'bg-white dark:bg-slate-950 text-slate-500 border-slate-200 dark:border-slate-800'}`}>
+                        <CreditCard className="w-6 h-6" /> <span className="text-[10px] font-black uppercase tracking-widest">Cartão</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* OPÇÕES EXTRAS PARA ENTRADA */}
+              {modalType === "IN" && (
+                <div className="bg-slate-50 dark:bg-slate-900/50 p-4 md:p-5 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-4">
+                  <h4 className="text-sm font-bold flex items-center gap-2 text-slate-800 dark:text-slate-200">
+                    <FileText className="w-4 h-4 text-brand-500" /> Detalhes da Nota
+                  </h4>
+                  
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">Nº da Nota Fiscal (Opcional)</label>
+                    <input 
+                      type="text" 
+                      placeholder="Ex: 000.123.456"
+                      className="w-full p-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-brand-500"
+                      value={invoiceNumber}
+                      onChange={(e) => setInvoiceNumber(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between bg-white dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                    <div className="flex items-center gap-2">
+                      <Receipt className="w-5 h-5 text-slate-400" />
+                      <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Veio com Boleto?</span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" className="sr-only peer" checked={hasBoleto} onChange={(e) => setHasBoleto(e.target.checked)} />
+                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-brand-500"></div>
+                    </label>
+                  </div>
+
+                  {hasBoleto && (
+                    <div className="bg-brand-50 dark:bg-brand-900/20 p-4 rounded-xl border border-brand-100 dark:border-brand-800/30 animate-in fade-in zoom-in-95 duration-200 space-y-4">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-500 mb-1">Valor do Boleto</label>
+                          <input 
+                            type="number" 
+                            step="0.01" 
+                            placeholder="Ex: 1500.00"
+                            className="w-full p-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-brand-500" 
+                            value={boletoAmount} 
+                            onChange={(e) => setBoletoAmount(e.target.value)} 
+                            required={hasBoleto} 
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-slate-500 mb-1">Vencimento</label>
+                          <input 
+                            type="date" 
+                            className="w-full p-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-brand-500" 
+                            value={boletoDueDate} 
+                            onChange={(e) => setBoletoDueDate(e.target.value)} 
+                            required={hasBoleto} 
+                          />
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between pt-2">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className={`w-5 h-5 ${isBoletoPaid ? 'text-green-500' : 'text-slate-400'}`} />
+                          <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Boleto já Pago?</span>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input type="checkbox" className="sr-only peer" checked={isBoletoPaid} onChange={(e) => setIsBoletoPaid(e.target.checked)} />
+                          <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-green-500"></div>
+                        </label>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <button 
+                type="submit" 
+                disabled={isSubmitting || products.length === 0}
+                className={`w-full p-5 md:p-6 mt-6 rounded-2xl md:rounded-3xl text-xl font-bold text-white transition-all shadow-lg active:scale-[0.98] ${
+                  modalType === 'OUT' 
+                    ? 'bg-brand-600 hover:bg-brand-700 shadow-brand-500/25' 
+                    : 'bg-slate-900 hover:bg-black dark:bg-slate-800 dark:hover:bg-slate-700'
+                } ${isSubmitting || products.length === 0 ? 'opacity-70 cursor-not-allowed' : ''}`}
+              >
+                {isSubmitting ? 'Registrando...' : 'Confirmar Lançamento'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE FECHAMENTO DE CAIXA (ADMIN) */}
+      {isClosingModalOpen && todaySummary && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm" onClick={() => setIsClosingModalOpen(false)}></div>
+          <div className="bg-white dark:bg-slate-950 w-full max-w-md rounded-3xl p-6 md:p-8 shadow-2xl relative z-10 border border-slate-100 dark:border-slate-800 animate-in zoom-in-95 duration-200">
+            
+            <div className="flex justify-between items-start mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400 rounded-2xl">
+                  <Wallet className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">Fechamento</h3>
+                  <span className="text-xs font-bold text-slate-400 uppercase">Conferência do Dia</span>
+                </div>
+              </div>
+              <button onClick={() => setIsClosingModalOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-900 rounded-full text-slate-500 hover:bg-slate-200">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="bg-slate-50 dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-4 mb-6">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-bold text-slate-500">Produtos Vendidos:</span>
+                <span className="text-lg font-black text-slate-800 dark:text-white">{todaySummary.totalSales} un</span>
+              </div>
+              <div className="h-px bg-slate-200 dark:bg-slate-800 w-full"></div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-bold flex items-center gap-2 text-slate-600 dark:text-slate-300"><Banknote className="w-4 h-4"/> Dinheiro na Gaveta</span>
+                <span className="text-lg font-black text-slate-800 dark:text-white">R$ {todaySummary.cashTotal.toFixed(2).replace('.',',')}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-bold flex items-center gap-2 text-slate-600 dark:text-slate-300"><Smartphone className="w-4 h-4"/> PIX (Conta Banco)</span>
+                <span className="text-lg font-black text-slate-800 dark:text-white">R$ {todaySummary.pixTotal.toFixed(2).replace('.',',')}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-bold flex items-center gap-2 text-slate-600 dark:text-slate-300"><CreditCard className="w-4 h-4"/> Maquininha (Cartão)</span>
+                <span className="text-lg font-black text-slate-800 dark:text-white">R$ {todaySummary.cardTotal.toFixed(2).replace('.',',')}</span>
+              </div>
+              <div className="h-px bg-slate-200 dark:bg-slate-800 w-full"></div>
+              <div className="flex justify-between items-end bg-brand-50 dark:bg-brand-900/20 p-4 rounded-2xl border border-brand-100 dark:border-brand-800/30">
+                <span className="text-sm font-black text-brand-600 dark:text-brand-400 uppercase tracking-widest">Faturamento Total</span>
+                <span className="text-2xl font-black text-brand-700 dark:text-brand-300">R$ {todaySummary.totalRevenue.toFixed(2).replace('.',',')}</span>
+              </div>
+            </div>
+
+            <button 
+              onClick={confirmClosing}
+              disabled={isSubmitting} 
+              className="w-full p-5 rounded-2xl text-lg font-bold text-white transition-all bg-slate-900 hover:bg-black dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 active:scale-95 shadow-lg flex items-center justify-center gap-2"
+            >
+              {isSubmitting ? 'Registrando...' : <><Check className="w-5 h-5"/> Confirmar Fechamento</>}
+            </button>
+          </div>
+        </div>
+      )}
+
+    </main>
   );
 }
