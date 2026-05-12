@@ -7,7 +7,7 @@ export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     const body = await req.json();
-    const { productId, type, quantity, invoiceNumber, hasBoleto, isBoletoPaid, boletoAmount, boletoDueDate, price, paymentMethod } = body;
+    const { productId, type, quantity, invoiceNumber, hasBoleto, isBoletoPaid, boletoAmount, boletoDueDate, price, paymentMethod, returnedEmpty, emptyQuantity } = body;
 
     if (!productId || !type || !quantity) {
       return NextResponse.json({ error: 'Dados incompletos' }, { status: 400 });
@@ -29,17 +29,30 @@ export async function POST(req: Request) {
           isBoletoPaid: isBoletoPaid || false,
           price: price ? parseFloat(price) : null,
           paymentMethod: paymentMethod || null,
+          returnedEmpty: type === 'OUT' ? (returnedEmpty !== undefined ? returnedEmpty : true) : null,
+          emptyQuantity: type === 'IN' ? (emptyQuantity !== undefined ? parseInt(emptyQuantity) : parseInt(quantity)) : null,
         },
         include: { product: true }
       });
 
-      // Atualiza o estoque
+      let emptyStockChange = 0;
+      if (type === 'IN') {
+         // O caminhão leva os vasilhames vazios (então subtrai o que foi informado, ou o padrão que é a mesma qtd recebida)
+         emptyStockChange = -(emptyQuantity !== undefined ? parseInt(emptyQuantity) : parseInt(quantity));
+      } else if (type === 'OUT' && returnedEmpty !== false) {
+         emptyStockChange = parseInt(quantity);
+      }
+
+      // Atualiza o estoque de Cheios e Vazios
       const product = await tx.product.update({
         where: { id: productId },
         data: {
           currentStock: {
             [type === 'IN' ? 'increment' : 'decrement']: parseInt(quantity),
           },
+          emptyStock: {
+            increment: emptyStockChange
+          }
         },
       });
 

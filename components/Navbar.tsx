@@ -1,7 +1,7 @@
 "use client";
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Flame, LayoutDashboard, FileText, LogOut, UserCircle, WalletCards } from 'lucide-react';
+import { Flame, LayoutDashboard, FileText, LogOut, UserCircle, WalletCards, PackageOpen, Layers } from 'lucide-react';
 import { useSession, signOut } from "next-auth/react";
 
 export function Navbar() {
@@ -14,7 +14,9 @@ export function Navbar() {
 
   const navItems = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+    { name: 'Inventário', href: '/inventario', icon: Layers },
     ...(isAdmin ? [
+      { name: 'Produtos', href: '/produtos', icon: PackageOpen },
       { name: 'Contas', href: '/contas', icon: WalletCards },
       { name: 'Relatórios', href: '/relatorios', icon: FileText },
       { name: 'Usuários', href: '/usuarios', icon: UserCircle }

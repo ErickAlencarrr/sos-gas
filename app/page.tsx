@@ -35,20 +35,13 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalType, setModalType] = useState<"IN" | "OUT">("OUT");
   const [selectedProduct, setSelectedProduct] = useState("");
   const [quantity, setQuantity] = useState(1);
-  
-  // Novos campos de Entrada
-  const [invoiceNumber, setInvoiceNumber] = useState("");
-  const [hasBoleto, setHasBoleto] = useState(false);
-  const [isBoletoPaid, setIsBoletoPaid] = useState(false);
-  const [boletoAmount, setBoletoAmount] = useState("");
-  const [boletoDueDate, setBoletoDueDate] = useState("");
 
   // Campos de Venda (Saída)
   const [price, setPrice] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("CASH");
+  const [returnedEmpty, setReturnedEmpty] = useState(true);
   
   // Resumo de Hoje e Fechamento
   const [todaySummary, setTodaySummary] = useState<any>(null);
@@ -82,16 +75,11 @@ export default function Home() {
     fetchProducts();
   }, []);
 
-  const openModal = (type: "IN" | "OUT") => {
-    setModalType(type);
+  const openModal = () => {
     setQuantity(1);
-    setInvoiceNumber("");
-    setHasBoleto(false);
-    setIsBoletoPaid(false);
-    setBoletoAmount("");
-    setBoletoDueDate("");
     setPrice("");
     setPaymentMethod("CASH");
+    setReturnedEmpty(true);
     if (products.length > 0) setSelectedProduct(products[0].id);
     setIsModalOpen(true);
   };
@@ -104,19 +92,11 @@ export default function Home() {
     try {
       const payload = {
         productId: selectedProduct,
-        type: modalType,
+        type: 'OUT',
         quantity: Number(quantity),
-        ...(modalType === 'IN' && {
-          invoiceNumber,
-          hasBoleto,
-          isBoletoPaid: hasBoleto ? isBoletoPaid : false,
-          boletoAmount,
-          boletoDueDate
-        }),
-        ...(modalType === 'OUT' && {
-          price: price,
-          paymentMethod: paymentMethod
-        })
+        price: price,
+        paymentMethod: paymentMethod,
+        returnedEmpty: returnedEmpty
       };
 
       const res = await fetch("/api/transactions", {
@@ -253,6 +233,7 @@ export default function Home() {
                 }`}>
                   {product.currentStock}
                 </span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase mt-1 z-10">Disponíveis (Cheios)</span>
                 {product.currentStock <= 5 && (
                   <span className="text-[10px] md:text-xs text-red-500 font-bold mt-2 uppercase animate-pulse bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-full">
                     Estoque Baixo
@@ -272,22 +253,12 @@ export default function Home() {
             
             <div className="space-y-4 md:space-y-5">
               <button 
-                onClick={() => openModal("OUT")} 
+                onClick={openModal} 
                 className="w-full bg-brand-600 hover:bg-brand-700 active:bg-brand-800 dark:bg-brand-500 dark:hover:bg-brand-600 text-white p-5 md:p-6 rounded-2xl md:rounded-3xl shadow-lg shadow-brand-500/25 flex items-center justify-center space-x-3 transition-all hover:-translate-y-1"
               >
                 <TrendingUp className="w-7 h-7 stroke-[2.5]" />
                 <span className="text-2xl md:text-3xl font-black tracking-wide">Vender</span>
               </button>
-              
-              {isAdmin && (
-                <button 
-                  onClick={() => openModal("IN")} 
-                  className="w-full bg-slate-900 hover:bg-black active:bg-black dark:bg-slate-800 dark:hover:bg-slate-700 text-white p-5 md:p-6 rounded-2xl md:rounded-3xl shadow-md flex items-center justify-center space-x-3 transition-all hover:-translate-y-1"
-                >
-                  <PlusCircle className="w-7 h-7 stroke-[2.5]" />
-                  <span className="text-xl md:text-2xl font-black tracking-wide">Receber Carga</span>
-                </button>
-              )}
 
               <div className="pt-4 pb-2">
                 <div className="h-px bg-slate-200 dark:bg-slate-800 w-full rounded-full"></div>
@@ -317,8 +288,8 @@ export default function Home() {
             
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-                {modalType === "OUT" ? <TrendingUp className="w-8 h-8 text-brand-500" /> : <PlusCircle className="w-8 h-8 text-slate-800 dark:text-white" />}
-                {modalType === "OUT" ? "Registrar Venda" : "Nova Carga"}
+                <TrendingUp className="w-8 h-8 text-brand-500" />
+                Registrar Venda
               </h3>
               <button onClick={() => setIsModalOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-900 rounded-full text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800 shrink-0">
                 <X className="w-6 h-6" />
@@ -370,8 +341,7 @@ export default function Home() {
               </div>
 
               {/* OPÇÕES EXTRAS PARA VENDA (OUT) */}
-              {modalType === "OUT" && (
-                <div className="bg-brand-50 dark:bg-brand-900/20 p-4 md:p-5 rounded-3xl border border-brand-100 dark:border-brand-800/30 space-y-4">
+              <div className="bg-brand-50 dark:bg-brand-900/20 p-4 md:p-5 rounded-3xl border border-brand-100 dark:border-brand-800/30 space-y-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-500 mb-1">Valor Total Cobrado (R$)</label>
                     <input 
@@ -398,87 +368,23 @@ export default function Home() {
                       </button>
                     </div>
                   </div>
-                </div>
-              )}
 
-              {/* OPÇÕES EXTRAS PARA ENTRADA */}
-              {modalType === "IN" && (
-                <div className="bg-slate-50 dark:bg-slate-900/50 p-4 md:p-5 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-4">
-                  <h4 className="text-sm font-bold flex items-center gap-2 text-slate-800 dark:text-slate-200">
-                    <FileText className="w-4 h-4 text-brand-500" /> Detalhes da Nota
-                  </h4>
-                  
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 mb-1">Nº da Nota Fiscal (Opcional)</label>
-                    <input 
-                      type="text" 
-                      placeholder="Ex: 000.123.456"
-                      className="w-full p-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-brand-500"
-                      value={invoiceNumber}
-                      onChange={(e) => setInvoiceNumber(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between bg-white dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <div className="flex items-center justify-between bg-white dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800 mt-2">
                     <div className="flex items-center gap-2">
-                      <Receipt className="w-5 h-5 text-slate-400" />
-                      <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Veio com Boleto?</span>
+                      <PackageOpen className="w-5 h-5 text-slate-400" />
+                      <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Houve devolução de vasilhame?</span>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" checked={hasBoleto} onChange={(e) => setHasBoleto(e.target.checked)} />
+                      <input type="checkbox" className="sr-only peer" checked={returnedEmpty} onChange={(e) => setReturnedEmpty(e.target.checked)} />
                       <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-brand-500"></div>
                     </label>
                   </div>
-
-                  {hasBoleto && (
-                    <div className="bg-brand-50 dark:bg-brand-900/20 p-4 rounded-xl border border-brand-100 dark:border-brand-800/30 animate-in fade-in zoom-in-95 duration-200 space-y-4">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-xs font-bold text-slate-500 mb-1">Valor do Boleto</label>
-                          <input 
-                            type="number" 
-                            step="0.01" 
-                            placeholder="Ex: 1500.00"
-                            className="w-full p-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-brand-500" 
-                            value={boletoAmount} 
-                            onChange={(e) => setBoletoAmount(e.target.value)} 
-                            required={hasBoleto} 
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-bold text-slate-500 mb-1">Vencimento</label>
-                          <input 
-                            type="date" 
-                            className="w-full p-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-brand-500" 
-                            value={boletoDueDate} 
-                            onChange={(e) => setBoletoDueDate(e.target.value)} 
-                            required={hasBoleto} 
-                          />
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between pt-2">
-                        <div className="flex items-center gap-2">
-                          <CheckCircle2 className={`w-5 h-5 ${isBoletoPaid ? 'text-green-500' : 'text-slate-400'}`} />
-                          <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Boleto já Pago?</span>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input type="checkbox" className="sr-only peer" checked={isBoletoPaid} onChange={(e) => setIsBoletoPaid(e.target.checked)} />
-                          <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-green-500"></div>
-                        </label>
-                      </div>
-                    </div>
-                  )}
                 </div>
-              )}
 
               <button 
                 type="submit" 
                 disabled={isSubmitting || products.length === 0}
-                className={`w-full p-5 md:p-6 mt-6 rounded-2xl md:rounded-3xl text-xl font-bold text-white transition-all shadow-lg active:scale-[0.98] ${
-                  modalType === 'OUT' 
-                    ? 'bg-brand-600 hover:bg-brand-700 shadow-brand-500/25' 
-                    : 'bg-slate-900 hover:bg-black dark:bg-slate-800 dark:hover:bg-slate-700'
-                } ${isSubmitting || products.length === 0 ? 'opacity-70 cursor-not-allowed' : ''}`}
+                className={`w-full p-5 md:p-6 mt-6 rounded-2xl md:rounded-3xl text-xl font-bold text-white transition-all shadow-lg active:scale-[0.98] bg-brand-600 hover:bg-brand-700 shadow-brand-500/25 ${isSubmitting || products.length === 0 ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
                 {isSubmitting ? 'Registrando...' : 'Confirmar Lançamento'}
               </button>

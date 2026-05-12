@@ -37,7 +37,8 @@ model Product {
   id           String        @id @default(uuid())
   name         String
   type         ProductType
-  currentStock Int           @default(0)
+  currentStock Int           @default(0) // Cheios
+  emptyStock   Int           @default(0) // Vazios
   transactions Transaction[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
@@ -53,11 +54,13 @@ model Transaction {
   // Campos de Venda (Saída)
   price         Float?          // Valor total cobrado na venda
   paymentMethod String?         // Forma de pagamento (PIX, CASH, CARD...)
+  returnedEmpty Boolean?        @default(true) // Cliente devolveu o vasilhame?
 
   // Campos de Entrada (Notas e Boletos)
   invoiceNumber String?
   hasBoleto     Boolean?        @default(false)
   isBoletoPaid  Boolean?        @default(false)
+  emptyQuantity Int?            // Quantidade de vazios devolvidos pro caminhão
   
   createdAt     DateTime        @default(now())
   bill          Bill?
