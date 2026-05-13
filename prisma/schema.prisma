@@ -62,6 +62,9 @@ model Transaction {
   isBoletoPaid  Boolean?        @default(false)
   emptyQuantity Int?            // Quantidade de vazios devolvidos pro caminhão
   
+  dailyClosingId String?
+  dailyClosing   DailyClosing?  @relation(fields: [dailyClosingId], references: [id])
+
   createdAt     DateTime        @default(now())
   bill          Bill?
 }
@@ -95,6 +98,8 @@ model DailyClosing {
   cardTotal    Float    @default(0)
 
   isClosed     Boolean  @default(false)
+  transactions Transaction[]
+  
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }

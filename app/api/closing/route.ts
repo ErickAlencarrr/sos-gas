@@ -36,6 +36,7 @@ export async function POST() {
     const outTransactions = await prisma.transaction.findMany({
       where: {
         type: 'OUT',
+        dailyClosingId: null,
         createdAt: { gte: startOfToday },
       },
     });
@@ -50,17 +51,28 @@ export async function POST() {
     const products = await prisma.product.findMany();
     const finalStock = products.reduce((acc, p) => acc + p.currentStock, 0);
 
-    const closing = await prisma.dailyClosing.create({
-      data: {
-        initialStock: 0, // Poderia cruzar com o fechamento anterior
-        finalStock,
-        totalSales,
-        totalRevenue,
-        pixTotal,
-        cashTotal,
-        cardTotal,
-        isClosed: true,
-      },
+    const closing = await prisma.$transaction(async (tx) => {
+      const newClosing = await tx.dailyClosing.create({
+        data: {
+          initialStock: 0,
+          finalStock,
+          totalSales,
+          totalRevenue,
+          pixTotal,
+          cashTotal,
+          cardTotal,
+          isClosed: true,
+        },
+      });
+
+      if (outTransactions.length > 0) {
+        await tx.transaction.updateMany({
+          where: { id: { in: outTransactions.map(t => t.id) } },
+          data: { dailyClosingId: newClosing.id }
+        });
+      }
+      
+      return newClosing;
     });
 
     return NextResponse.json(closing);

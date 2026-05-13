@@ -19,6 +19,7 @@ export async function GET() {
     const outTransactions = await prisma.transaction.findMany({
       where: {
         type: 'OUT',
+        dailyClosingId: null,
         createdAt: { gte: startOfToday },
       },
     });
