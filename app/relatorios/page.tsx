@@ -1,50 +1,49 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowUpCircle, ArrowDownCircle, Receipt, CheckCircle2, PackageOpen, FileText } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { FileText, Wallet, CalendarDays, ArrowRight } from "lucide-react";
 
-type Transaction = {
+type DailyClosing = {
   id: string;
-  type: "IN" | "OUT";
-  quantity: number;
+  date: string;
+  totalSales: number;
+  totalRevenue: number;
+  pixTotal: number;
+  cashTotal: number;
+  cardTotal: number;
   createdAt: string;
-  invoiceNumber?: string | null;
-  hasBoleto?: boolean | null;
-  isBoletoPaid?: boolean | null;
-  product: {
-    name: string;
-    type: "GAS" | "WATER";
-  };
 };
 
-export default function Relatorios() {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+export default function RelatoriosPage() {
+  const [closings, setClosings] = useState<DailyClosing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    const fetchTransactions = async () => {
+    const fetchClosings = async () => {
       try {
-        const res = await fetch("/api/transactions/history");
+        const res = await fetch("/api/closing");
         if(res.ok) {
           const data = await res.json();
-          setTransactions(data);
+          setClosings(data);
         }
       } catch (error) {
-        console.error("Erro ao buscar", error);
+        console.error("Erro ao buscar fechamentos", error);
       } finally {
         setIsLoading(false);
       }
     };
-    fetchTransactions();
+    fetchClosings();
   }, []);
 
   return (
-    <main className="p-5 md:p-8 font-sans pb-28 md:pb-8">
+    <main className="p-5 md:p-8 font-sans pb-28 md:pb-8 max-w-5xl mx-auto">
       <header className="mb-8">
         <h2 className="text-3xl font-black text-slate-800 dark:text-white flex items-center gap-3">
-          <FileText className="w-8 h-8 text-brand-500" /> Relatórios
+          <FileText className="w-8 h-8 text-brand-500" /> Relatórios de Caixa
         </h2>
-        <p className="text-slate-500 mt-2 font-medium">Histórico completo de Entradas e Saídas do estoque.</p>
+        <p className="text-slate-500 mt-2 font-medium">Histórico completo de todos os fechamentos de caixa realizados.</p>
       </header>
 
       {/* Versão Desktop (Tabela) */}
@@ -52,47 +51,44 @@ export default function Relatorios() {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50 dark:bg-slate-950/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-widest border-b border-slate-200 dark:border-slate-800">
-              <th className="p-5 font-bold">Tipo</th>
-              <th className="p-5 font-bold">Produto</th>
-              <th className="p-5 font-bold text-center">Quantidade</th>
-              <th className="p-5 font-bold">Detalhes da Nota</th>
-              <th className="p-5 font-bold">Data/Hora</th>
+              <th className="p-5 font-bold">Data do Fechamento</th>
+              <th className="p-5 font-bold text-center">Faturamento Total</th>
+              <th className="p-5 font-bold text-center">Produtos Vendidos</th>
+              <th className="p-5 font-bold text-right">Ação</th>
             </tr>
           </thead>
           <tbody className="text-sm">
             {isLoading ? (
-              <tr><td colSpan={5} className="p-8 text-center text-slate-400">Carregando...</td></tr>
-            ) : transactions.length === 0 ? (
-              <tr><td colSpan={5} className="p-8 text-center text-slate-400">Nenhum registro encontrado.</td></tr>
+              <tr><td colSpan={4} className="p-8 text-center text-slate-400">Carregando fechamentos...</td></tr>
+            ) : closings.length === 0 ? (
+              <tr><td colSpan={4} className="p-8 text-center text-slate-400">Nenhum fechamento registrado ainda.</td></tr>
             ) : (
-              transactions.map((tx) => (
-                <tr key={tx.id} className="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                  <td className="p-5 font-bold flex items-center gap-2">
-                    {tx.type === 'IN' ? (
-                      <span className="text-blue-600 dark:text-blue-400 flex items-center gap-1"><ArrowUpCircle className="w-5 h-5"/> Entrada</span>
-                    ) : (
-                      <span className="text-brand-600 dark:text-brand-500 flex items-center gap-1"><ArrowDownCircle className="w-5 h-5"/> Venda</span>
-                    )}
-                  </td>
-                  <td className="p-5 font-bold text-slate-700 dark:text-slate-200">{tx.product.name}</td>
-                  <td className="p-5 font-black text-center text-lg">{tx.quantity}</td>
-                  <td className="p-5">
-                    {tx.type === 'IN' ? (
-                      <div className="flex flex-col gap-1 text-xs">
-                        {tx.invoiceNumber ? <span className="font-mono text-slate-500">NF: {tx.invoiceNumber}</span> : <span className="text-slate-400 italic">S/ Nota</span>}
-                        {tx.hasBoleto && (
-                          <span className={`inline-flex items-center gap-1 w-max px-2 py-0.5 rounded-full font-bold ${tx.isBoletoPaid ? 'bg-green-100 text-green-700 dark:bg-green-900/30' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30'}`}>
-                            {tx.isBoletoPaid ? <CheckCircle2 className="w-3 h-3"/> : <Receipt className="w-3 h-3"/>}
-                            {tx.isBoletoPaid ? 'Boleto Pago' : 'Boleto Pendente'}
-                          </span>
-                        )}
+              closings.map((closing) => (
+                <tr key={closing.id} className="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                  <td className="p-5 font-bold flex items-center gap-3 text-slate-800 dark:text-slate-200">
+                    <div className="p-2 bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400 rounded-xl">
+                      <CalendarDays className="w-5 h-5" />
+                    </div>
+                    <div>
+                      {new Date(closing.createdAt).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'long', year: 'numeric' })}
+                      <div className="text-xs text-slate-400 font-medium">
+                        às {new Date(closing.createdAt).toLocaleTimeString('pt-BR')}
                       </div>
-                    ) : (
-                      <span className="text-slate-300 dark:text-slate-600">-</span>
-                    )}
+                    </div>
                   </td>
-                  <td className="p-5 text-slate-500 dark:text-slate-400 font-medium">
-                    {new Date(tx.createdAt).toLocaleString('pt-BR')}
+                  <td className="p-5 font-black text-center text-lg text-brand-700 dark:text-brand-400">
+                    R$ {closing.totalRevenue.toFixed(2).replace('.', ',')}
+                  </td>
+                  <td className="p-5 font-bold text-center text-slate-600 dark:text-slate-300">
+                    {closing.totalSales} un
+                  </td>
+                  <td className="p-5 text-right">
+                    <button 
+                      onClick={() => router.push(`/relatorios/fechamento/${closing.id}`)}
+                      className="px-4 py-2 bg-slate-900 hover:bg-black dark:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-xl font-bold transition-all active:scale-95 inline-flex items-center gap-2"
+                    >
+                      Ver Detalhes <ArrowRight className="w-4 h-4" />
+                    </button>
                   </td>
                 </tr>
               ))
@@ -104,44 +100,42 @@ export default function Relatorios() {
       {/* Versão Mobile (Cards) */}
       <div className="md:hidden space-y-4">
         {isLoading ? (
-          <div className="text-center text-slate-400 py-8">Carregando histórico...</div>
-        ) : transactions.length === 0 ? (
-          <div className="text-center text-slate-400 py-8">Nenhum registro encontrado.</div>
+          <div className="text-center text-slate-400 py-8">Carregando fechamentos...</div>
+        ) : closings.length === 0 ? (
+          <div className="text-center text-slate-400 py-8">Nenhum fechamento registrado ainda.</div>
         ) : (
-          transactions.map((tx) => (
-            <div key={tx.id} className="bg-white dark:bg-slate-900 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800">
-              <div className="flex justify-between items-start mb-3">
-                <div className="flex items-center gap-2">
-                  {tx.type === 'IN' ? <ArrowUpCircle className="w-6 h-6 text-blue-500" /> : <ArrowDownCircle className="w-6 h-6 text-brand-500" />}
-                  <div>
-                    <h4 className="font-bold text-slate-800 dark:text-white leading-tight">{tx.product.name}</h4>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">{tx.type === 'IN' ? 'Entrada' : 'Venda'}</span>
+          closings.map((closing) => (
+            <div 
+              key={closing.id} 
+              onClick={() => router.push(`/relatorios/fechamento/${closing.id}`)}
+              className="bg-white dark:bg-slate-900 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 cursor-pointer active:scale-[0.98] transition-all"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400 rounded-2xl">
+                    <Wallet className="w-6 h-6" />
                   </div>
-                </div>
-                <div className="bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-100 dark:border-slate-700">
-                  <span className="font-black text-lg text-slate-800 dark:text-white">{tx.type === 'IN' ? '+' : '-'}{tx.quantity}</span>
+                  <div>
+                    <h4 className="font-bold text-slate-800 dark:text-white capitalize">
+                      {new Date(closing.createdAt).toLocaleDateString('pt-BR', { weekday: 'long' })}
+                    </h4>
+                    <span className="text-xs font-bold text-slate-400">
+                      {new Date(closing.createdAt).toLocaleDateString('pt-BR')} às {new Date(closing.createdAt).toLocaleTimeString('pt-BR')}
+                    </span>
+                  </div>
                 </div>
               </div>
               
-              <div className="text-xs text-slate-400 font-medium mb-3 flex items-center gap-1">
-                {new Date(tx.createdAt).toLocaleString('pt-BR')}
-              </div>
-
-              {tx.type === 'IN' && (tx.invoiceNumber || tx.hasBoleto) && (
-                <div className="bg-slate-50 dark:bg-slate-950 p-3 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-2 mt-2 text-sm">
-                  {tx.invoiceNumber && (
-                    <div className="flex items-center gap-2 font-mono text-slate-600 dark:text-slate-300">
-                      <FileText className="w-4 h-4 text-slate-400"/> NF: {tx.invoiceNumber}
-                    </div>
-                  )}
-                  {tx.hasBoleto && (
-                    <div className={`flex items-center gap-2 font-bold ${tx.isBoletoPaid ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`}>
-                      {tx.isBoletoPaid ? <CheckCircle2 className="w-4 h-4"/> : <Receipt className="w-4 h-4"/>}
-                      {tx.isBoletoPaid ? 'Boleto Pago' : 'Boleto Pendente de Pagamento'}
-                    </div>
-                  )}
+              <div className="flex justify-between items-end bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                <div>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Faturamento</span>
+                  <span className="text-2xl font-black text-brand-600 dark:text-brand-400">R$ {closing.totalRevenue.toFixed(2).replace('.', ',')}</span>
                 </div>
-              )}
+                <div className="text-right">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Vendas</span>
+                  <span className="text-lg font-bold text-slate-700 dark:text-slate-300">{closing.totalSales} un</span>
+                </div>
+              </div>
             </div>
           ))
         )}

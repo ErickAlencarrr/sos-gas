@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { 
   PlusCircle, 
   MinusCircle, 
@@ -28,6 +29,7 @@ type Product = {
 };
 
 export default function Home() {
+  const router = useRouter();
   const { data: session } = useSession();
   const isAdmin = session?.user?.role === "ADMIN";
 
@@ -122,9 +124,9 @@ export default function Home() {
       setIsSubmitting(true);
       const res = await fetch("/api/closing", { method: "POST" });
       if(res.ok) {
-        alert("Caixa fechado com sucesso!");
+        const data = await res.json();
         setIsClosingModalOpen(false);
-        fetchProducts();
+        router.push(`/relatorios/fechamento/${data.id}`);
       } else {
         alert("Erro ao fechar caixa");
       }
