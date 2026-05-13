@@ -111,32 +111,34 @@ export default function ProdutosPage() {
         {isLoading ? (
           <div className="p-8 text-center text-slate-400">Carregando produtos...</div>
         ) : (
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50 dark:bg-slate-950/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-widest border-b border-slate-200 dark:border-slate-800">
-                <th className="p-5 font-bold">Produto</th>
-                <th className="p-5 font-bold text-center">Estoque Atual (Cheios)</th>
-                <th className="p-5 font-bold text-center">Vasilhames (Vazios)</th>
-                <th className="p-5 font-bold text-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="text-sm">
-              {products.map(product => (
-                <tr key={product.id} className="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                  <td className="p-5 font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                    {product.type === 'GAS' ? <Flame className="w-4 h-4 text-brand-500" /> : <Droplets className="w-4 h-4 text-blue-400" />}
-                    {product.name}
-                  </td>
-                  <td className="p-5 font-black text-center text-lg">{product.currentStock}</td>
-                  <td className="p-5 font-black text-center text-lg text-slate-400">{product.emptyStock}</td>
-                  <td className="p-5 flex justify-end gap-2">
-                    <button onClick={() => openModal(product)} className="p-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"><Edit className="w-4 h-4"/></button>
-                    <button onClick={() => handleDelete(product.id)} className="p-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"><Trash2 className="w-4 h-4"/></button>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[600px]">
+              <thead>
+                <tr className="bg-slate-50 dark:bg-slate-950/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-widest border-b border-slate-200 dark:border-slate-800">
+                  <th className="p-5 font-bold">Produto</th>
+                  <th className="p-5 font-bold text-center">Estoque Atual (Cheios)</th>
+                  <th className="p-5 font-bold text-center">Vasilhames (Vazios)</th>
+                  <th className="p-5 font-bold text-right">Ações</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="text-sm">
+                {products.map(product => (
+                  <tr key={product.id} className="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                    <td className="p-5 font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                      {product.type === 'GAS' ? <Flame className="w-4 h-4 text-brand-500" /> : <Droplets className="w-4 h-4 text-blue-400" />}
+                      {product.name}
+                    </td>
+                    <td className="p-5 font-black text-center text-lg">{product.currentStock}</td>
+                    <td className="p-5 font-black text-center text-lg text-slate-400">{product.emptyStock}</td>
+                    <td className="p-5 flex justify-end gap-2">
+                      <button onClick={() => openModal(product)} className="p-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"><Edit className="w-4 h-4"/></button>
+                      <button onClick={() => handleDelete(product.id)} className="p-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"><Trash2 className="w-4 h-4"/></button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 

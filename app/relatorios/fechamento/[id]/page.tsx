@@ -107,36 +107,38 @@ export default function FechamentoRelatorioPage() {
 
             {closing.transactions && closing.transactions.length > 0 && (
               <div className="border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-widest border-b border-slate-100 dark:border-slate-800">
-                      <th className="p-4 font-bold">Produto</th>
-                      <th className="p-4 font-bold text-center">Qtd</th>
-                      <th className="p-4 font-bold">Pagamento</th>
-                      <th className="p-4 font-bold text-right">Valor</th>
-                      <th className="p-4 font-bold text-right">Hora</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-sm">
-                    {closing.transactions.map((tx: any) => (
-                      <tr key={tx.id} className="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                        <td className="p-4 font-bold text-slate-700 dark:text-slate-200">{tx.product.name}</td>
-                        <td className="p-4 font-black text-center">{tx.quantity}</td>
-                        <td className="p-4">
-                          <span className="text-[10px] font-bold uppercase px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500">
-                            {tx.paymentMethod === 'CASH' ? 'Dinheiro' : tx.paymentMethod === 'PIX' ? 'PIX' : 'Cartão'}
-                          </span>
-                        </td>
-                        <td className="p-4 font-bold text-right text-brand-600 dark:text-brand-400">
-                          R$ {tx.price ? tx.price.toFixed(2).replace('.', ',') : '0,00'}
-                        </td>
-                        <td className="p-4 text-xs font-bold text-slate-400 text-right">
-                          {new Date(tx.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                        </td>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse min-w-[600px]">
+                    <thead>
+                      <tr className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-widest border-b border-slate-100 dark:border-slate-800">
+                        <th className="p-4 font-bold">Produto</th>
+                        <th className="p-4 font-bold text-center">Qtd</th>
+                        <th className="p-4 font-bold">Pagamento</th>
+                        <th className="p-4 font-bold text-right">Valor</th>
+                        <th className="p-4 font-bold text-right">Hora</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="text-sm">
+                      {closing.transactions.map((tx: any) => (
+                        <tr key={tx.id} className="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                          <td className="p-4 font-bold text-slate-700 dark:text-slate-200">{tx.product.name}</td>
+                          <td className="p-4 font-black text-center">{tx.quantity}</td>
+                          <td className="p-4">
+                            <span className="text-[10px] font-bold uppercase px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500">
+                              {tx.paymentMethod === 'CASH' ? 'Dinheiro' : tx.paymentMethod === 'PIX' ? 'PIX' : 'Cartão'}
+                            </span>
+                          </td>
+                          <td className="p-4 font-bold text-right text-brand-600 dark:text-brand-400">
+                            R$ {tx.price ? tx.price.toFixed(2).replace('.', ',') : '0,00'}
+                          </td>
+                          <td className="p-4 text-xs font-bold text-slate-400 text-right">
+                            {new Date(tx.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
             {closing.transactions && closing.transactions.length === 0 && (

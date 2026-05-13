@@ -110,33 +110,35 @@ export default function UsuariosPage() {
         {isLoading ? (
           <div className="p-8 text-center text-slate-400">Carregando usuários...</div>
         ) : (
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50 dark:bg-slate-950/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-widest border-b border-slate-200 dark:border-slate-800">
-                <th className="p-5 font-bold">Nome</th>
-                <th className="p-5 font-bold">E-mail (Acesso)</th>
-                <th className="p-5 font-bold">Cargo</th>
-                <th className="p-5 font-bold text-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="text-sm">
-              {users.map(user => (
-                <tr key={user.id} className="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                  <td className="p-5 font-bold text-slate-800 dark:text-white">{user.name}</td>
-                  <td className="p-5 text-slate-600 dark:text-slate-300">{user.email}</td>
-                  <td className="p-5">
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${user.role === 'ADMIN' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30' : 'bg-slate-100 text-slate-700 dark:bg-slate-800'}`}>
-                      {user.role === 'ADMIN' ? 'Diretoria' : 'Funcionário'}
-                    </span>
-                  </td>
-                  <td className="p-5 flex justify-end gap-2">
-                    <button onClick={() => openModal(user)} className="p-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"><Edit className="w-4 h-4"/></button>
-                    <button onClick={() => handleDelete(user.id)} className="p-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"><Trash2 className="w-4 h-4"/></button>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[600px]">
+              <thead>
+                <tr className="bg-slate-50 dark:bg-slate-950/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-widest border-b border-slate-200 dark:border-slate-800">
+                  <th className="p-5 font-bold">Nome</th>
+                  <th className="p-5 font-bold">E-mail (Acesso)</th>
+                  <th className="p-5 font-bold">Cargo</th>
+                  <th className="p-5 font-bold text-right">Ações</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="text-sm">
+                {users.map(user => (
+                  <tr key={user.id} className="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                    <td className="p-5 font-bold text-slate-800 dark:text-white">{user.name}</td>
+                    <td className="p-5 text-slate-600 dark:text-slate-300">{user.email}</td>
+                    <td className="p-5">
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${user.role === 'ADMIN' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30' : 'bg-slate-100 text-slate-700 dark:bg-slate-800'}`}>
+                        {user.role === 'ADMIN' ? 'Diretoria' : 'Funcionário'}
+                      </span>
+                    </td>
+                    <td className="p-5 flex justify-end gap-2">
+                      <button onClick={() => openModal(user)} className="p-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"><Edit className="w-4 h-4"/></button>
+                      <button onClick={() => handleDelete(user.id)} className="p-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"><Trash2 className="w-4 h-4"/></button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
