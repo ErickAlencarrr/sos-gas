@@ -87,29 +87,29 @@ export function Navbar() {
       </nav>
 
       {/* Menu Inferior (Mobile) */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 z-40 pb-2 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
-        <div className="flex justify-around items-center p-2">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 z-40 pb-safe shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
+        <div className="flex items-center overflow-x-auto p-2 gap-1 snap-x scroll-smooth">
           {navItems.map((item) => (
             <Link 
               key={item.href} 
               href={item.href}
-              className={`flex flex-col items-center gap-1 p-3 w-full rounded-2xl transition-all ${
+              className={`flex flex-col items-center justify-center gap-1 p-3 min-w-[80px] shrink-0 rounded-2xl transition-all snap-start ${
                 pathname === item.href 
-                  ? 'text-brand-600 dark:text-brand-400' 
+                  ? 'text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-900/20' 
                   : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
               }`}
             >
               <item.icon className={`w-6 h-6 ${pathname === item.href ? 'fill-brand-100 dark:fill-brand-900/50' : ''}`} />
-              <span className="text-[11px] font-bold">{item.name}</span>
+              <span className="text-[11px] font-bold text-center leading-tight">{item.name}</span>
             </Link>
           ))}
           
           <button 
             onClick={() => signOut({ callbackUrl: '/login' })}
-            className="flex flex-col items-center gap-1 p-3 w-full rounded-2xl transition-all text-slate-400 hover:text-red-500"
+            className="flex flex-col items-center justify-center gap-1 p-3 min-w-[80px] shrink-0 rounded-2xl transition-all text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 snap-start"
           >
             <LogOut className="w-6 h-6" />
-            <span className="text-[11px] font-bold">Sair</span>
+            <span className="text-[11px] font-bold text-center leading-tight">Sair</span>
           </button>
         </div>
       </nav>
