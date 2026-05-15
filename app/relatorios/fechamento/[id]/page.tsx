@@ -158,18 +158,3 @@ export default function FechamentoRelatorioPage() {
     </main>
   );
 }
-este dia.
-              </div>
-            )}
-          </div>
-
-        </div>
-
-        <div className="bg-slate-50 dark:bg-slate-900/50 p-6 text-center border-t border-slate-100 dark:border-slate-800">
-          <p className="text-xs font-bold text-slate-400 uppercase">Documento Gerado Eletronicamente via SOS Gás</p>
-          <p className="text-[10px] text-slate-400 mt-1">{closing.id}</p>
-        </div>
-      </div>
-    </main>
-  );
-}

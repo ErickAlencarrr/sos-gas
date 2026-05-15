@@ -254,13 +254,3 @@ export default function RelatoriosPage() {
     </main>
   );
 }
-Total.toFixed(2).replace('.',',')}</span>
-                </div>
-              )}
-            </div>
-          ))
-        )}
-      </div>
-    </main>
-  );
-}
