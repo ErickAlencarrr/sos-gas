@@ -44,16 +44,31 @@ model Product {
   updatedAt    DateTime      @updatedAt
 }
 
+model Customer {
+  id        String   @id @default(uuid())
+  name      String
+  balance   Float    @default(0) // Saldo devedor (fiado)
+  
+  transactions Transaction[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Transaction {
   id            String          @id @default(uuid())
   productId     String
   product       Product         @relation(fields: [productId], references: [id])
+  
+  customerId    String?         // Opcional, usado quando paymentMethod for CLIENT
+  customer      Customer?       @relation(fields: [customerId], references: [id])
+
   type          TransactionType
   quantity      Int
   
   // Campos de Venda (Saída)
   price         Float?          // Valor total cobrado na venda
-  paymentMethod String?         // Forma de pagamento (PIX, CASH, CARD...)
+  paymentMethod String?         // Forma de pagamento (PIX, CASH, CARD, CLIENT...)
   returnedEmpty Boolean?        @default(true) // Cliente devolveu o vasilhame?
 
   // Campos de Entrada (Notas e Boletos)
@@ -96,7 +111,7 @@ model DailyClosing {
   pixTotal     Float    @default(0)
   cashTotal    Float    @default(0)
   cardTotal    Float    @default(0)
-  sosTotal     Float    @default(0)
+  clientTotal  Float    @default(0) // Valor em Conta Cliente no dia
 
   isClosed     Boolean  @default(false)
   transactions Transaction[]

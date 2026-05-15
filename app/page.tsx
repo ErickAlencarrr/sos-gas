@@ -28,12 +28,19 @@ type Product = {
   currentStock: number;
 };
 
+type Customer = {
+  id: string;
+  name: string;
+  balance: number;
+};
+
 export default function Home() {
   const router = useRouter();
   const { data: session } = useSession();
   const isAdmin = session?.user?.role === "ADMIN";
 
   const [products, setProducts] = useState<Product[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -44,6 +51,11 @@ export default function Home() {
   const [price, setPrice] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("CASH");
   const [returnedEmpty, setReturnedEmpty] = useState(true);
+  
+  // Campos de Cliente
+  const [selectedCustomer, setSelectedCustomer] = useState("");
+  const [newCustomerName, setNewCustomerName] = useState("");
+  const [isCreatingCustomer, setIsCreatingCustomer] = useState(false);
   
   // Resumo de Hoje e Fechamento
   const [todaySummary, setTodaySummary] = useState<any>(null);
@@ -57,6 +69,13 @@ export default function Home() {
     } catch(e) {}
   };
 
+  const fetchCustomers = async () => {
+    try {
+      const res = await fetch("/api/customers");
+      if(res.ok) setCustomers(await res.json());
+    } catch(e) {}
+  };
+
   const fetchProducts = async () => {
     setIsLoading(true);
     try {
@@ -66,6 +85,7 @@ export default function Home() {
         setProducts(data);
       }
       fetchSummary();
+      fetchCustomers();
     } catch (error) {
       console.error(error);
     } finally {
@@ -82,13 +102,43 @@ export default function Home() {
     setPrice("");
     setPaymentMethod("CASH");
     setReturnedEmpty(true);
+    setSelectedCustomer("");
+    setNewCustomerName("");
+    setIsCreatingCustomer(false);
     if (products.length > 0) setSelectedProduct(products[0].id);
     setIsModalOpen(true);
+  };
+
+  const handleCreateCustomer = async () => {
+    if (!newCustomerName.trim()) return;
+    setIsSubmitting(true);
+    try {
+      const res = await fetch("/api/customers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newCustomerName })
+      });
+      if (res.ok) {
+        const newCustomer = await res.json();
+        await fetchCustomers();
+        setSelectedCustomer(newCustomer.id);
+        setIsCreatingCustomer(false);
+        setNewCustomerName("");
+      }
+    } catch (error) {
+      alert("Erro ao criar cliente");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedProduct || quantity <= 0) return;
+    if (paymentMethod === 'CLIENT' && !selectedCustomer) {
+      alert("Selecione um cliente para a Conta Cliente.");
+      return;
+    }
     
     setIsSubmitting(true);
     try {
@@ -98,7 +148,8 @@ export default function Home() {
         quantity: Number(quantity),
         price: price,
         paymentMethod: paymentMethod,
-        returnedEmpty: returnedEmpty
+        returnedEmpty: returnedEmpty,
+        customerId: paymentMethod === 'CLIENT' ? selectedCustomer : null
       };
 
       const res = await fetch("/api/transactions", {
@@ -192,9 +243,9 @@ export default function Home() {
                 </div>
                 <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-3xl border border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-2 text-slate-500 mb-2">
-                    <PackageOpen className="w-4 h-4"/> <span className="text-[10px] font-black uppercase tracking-widest">Vendas SoS</span>
+                    <PackageOpen className="w-4 h-4"/> <span className="text-[10px] font-black uppercase tracking-widest">Conta Cliente</span>
                   </div>
-                  <p className="text-lg font-black text-slate-800 dark:text-white">R$ {todaySummary.sosTotal.toFixed(2).replace('.',',')}</p>
+                  <p className="text-lg font-black text-slate-800 dark:text-white">R$ {todaySummary.clientTotal.toFixed(2).replace('.',',')}</p>
                 </div>
                 </div>
             </section>
@@ -374,11 +425,64 @@ export default function Home() {
                       <button type="button" onClick={() => setPaymentMethod('CARD')} className={`flex flex-col items-center gap-1 p-3 rounded-2xl border transition-all ${paymentMethod === 'CARD' ? 'bg-purple-500 text-white border-purple-500' : 'bg-white dark:bg-slate-950 text-slate-500 border-slate-200 dark:border-slate-800'}`}>
                         <CreditCard className="w-6 h-6" /> <span className="text-[10px] font-black uppercase tracking-widest">Cartão</span>
                       </button>
-                      <button type="button" onClick={() => setPaymentMethod('SOS')} className={`flex flex-col items-center gap-1 p-3 rounded-2xl border transition-all ${paymentMethod === 'SOS' ? 'bg-orange-500 text-white border-orange-500' : 'bg-white dark:bg-slate-950 text-slate-500 border-slate-200 dark:border-slate-800'}`}>
-                        <PackageOpen className="w-6 h-6" /> <span className="text-[10px] font-black uppercase tracking-widest">Vendas SoS</span>
+                      <button type="button" onClick={() => setPaymentMethod('CLIENT')} className={`flex flex-col items-center gap-1 p-3 rounded-2xl border transition-all ${paymentMethod === 'CLIENT' ? 'bg-orange-500 text-white border-orange-500' : 'bg-white dark:bg-slate-950 text-slate-500 border-slate-200 dark:border-slate-800'}`}>
+                        <PackageOpen className="w-6 h-6" /> <span className="text-[10px] font-black uppercase tracking-widest">Conta Cliente</span>
                       </button>
                     </div>
                   </div>
+
+                  {paymentMethod === 'CLIENT' && (
+                    <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-2xl border border-orange-100 dark:border-orange-800/30">
+                      <label className="block text-xs font-bold text-orange-600 dark:text-orange-400 mb-2">Selecione o Cliente</label>
+                      {!isCreatingCustomer ? (
+                        <div className="flex gap-2">
+                          <select
+                            className="flex-1 p-3 bg-white dark:bg-slate-900 border border-orange-200 dark:border-orange-800/50 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-orange-500"
+                            value={selectedCustomer}
+                            onChange={(e) => setSelectedCustomer(e.target.value)}
+                          >
+                            <option value="">-- Escolha um cliente --</option>
+                            {customers.map(c => (
+                              <option key={c.id} value={c.id}>{c.name}</option>
+                            ))}
+                          </select>
+                          <button
+                            type="button"
+                            onClick={() => setIsCreatingCustomer(true)}
+                            className="p-3 bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400 rounded-xl font-bold text-sm hover:bg-orange-200 transition-colors"
+                          >
+                            Novo
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            placeholder="Nome do cliente"
+                            className="flex-1 p-3 bg-white dark:bg-slate-900 border border-orange-200 dark:border-orange-800/50 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-orange-500"
+                            value={newCustomerName}
+                            onChange={(e) => setNewCustomerName(e.target.value)}
+                            autoFocus
+                          />
+                          <button
+                            type="button"
+                            onClick={handleCreateCustomer}
+                            disabled={!newCustomerName.trim() || isSubmitting}
+                            className="p-3 bg-orange-500 text-white rounded-xl font-bold text-sm hover:bg-orange-600 disabled:opacity-50 transition-colors"
+                          >
+                            Salvar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { setIsCreatingCustomer(false); setNewCustomerName(""); }}
+                            className="p-3 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-xl hover:bg-slate-200"
+                          >
+                            <X className="w-5 h-5" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   <div className="flex items-center justify-between bg-white dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800 mt-2">
                     <div className="flex items-center gap-2">
@@ -443,6 +547,10 @@ export default function Home() {
                 <span className="text-sm font-bold flex items-center gap-2 text-slate-600 dark:text-slate-300"><CreditCard className="w-4 h-4"/> Maquininha (Cartão)</span>
                 <span className="text-lg font-black text-slate-800 dark:text-white">R$ {todaySummary.cardTotal.toFixed(2).replace('.',',')}</span>
               </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-bold flex items-center gap-2 text-slate-600 dark:text-slate-300"><PackageOpen className="w-4 h-4"/> Conta Cliente</span>
+                <span className="text-lg font-black text-slate-800 dark:text-white">R$ {todaySummary.clientTotal.toFixed(2).replace('.',',')}</span>
+              </div>
               <div className="h-px bg-slate-200 dark:bg-slate-800 w-full"></div>
               <div className="flex justify-between items-end bg-brand-50 dark:bg-brand-900/20 p-4 rounded-2xl border border-brand-100 dark:border-brand-800/30">
                 <span className="text-sm font-black text-brand-600 dark:text-brand-400 uppercase tracking-widest">Faturamento Total</span>
@@ -460,7 +568,6 @@ export default function Home() {
           </div>
         </div>
       )}
-
     </main>
   );
 }

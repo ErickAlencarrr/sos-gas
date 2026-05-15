@@ -30,7 +30,7 @@ export async function GET() {
     const pixTotal = outTransactions.filter(t => t.paymentMethod === 'PIX').reduce((acc, tx) => acc + (tx.price || 0), 0);
     const cashTotal = outTransactions.filter(t => t.paymentMethod === 'CASH').reduce((acc, tx) => acc + (tx.price || 0), 0);
     const cardTotal = outTransactions.filter(t => t.paymentMethod === 'CARD').reduce((acc, tx) => acc + (tx.price || 0), 0);
-    const sosTotal = outTransactions.filter(t => t.paymentMethod === 'SOS').reduce((acc, tx) => acc + (tx.price || 0), 0);
+    const clientTotal = outTransactions.filter(t => t.paymentMethod === 'CLIENT').reduce((acc, tx) => acc + (tx.price || 0), 0);
 
     return NextResponse.json({
       totalSales,
@@ -38,7 +38,7 @@ export async function GET() {
       pixTotal,
       cashTotal,
       cardTotal,
-      sosTotal
+      clientTotal
     });
   } catch (error) {
     return NextResponse.json({ error: 'Erro ao buscar resumo' }, { status: 500 });

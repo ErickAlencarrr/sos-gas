@@ -1,7 +1,7 @@
 "use client";
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Flame, LayoutDashboard, FileText, LogOut, UserCircle, WalletCards, PackageOpen, Layers } from 'lucide-react';
+import { Flame, LayoutDashboard, FileText, LogOut, UserCircle, WalletCards, PackageOpen, Layers, Users, Settings } from 'lucide-react';
 import { useSession, signOut } from "next-auth/react";
 
 export function Navbar() {
@@ -18,8 +18,10 @@ export function Navbar() {
     ...(isAdmin ? [
       { name: 'Produtos', href: '/produtos', icon: PackageOpen },
       { name: 'Contas', href: '/contas', icon: WalletCards },
+      { name: 'Clientes', href: '/clientes', icon: Users },
       { name: 'Relatórios', href: '/relatorios', icon: FileText },
-      { name: 'Usuários', href: '/usuarios', icon: UserCircle }
+      { name: 'Usuários', href: '/usuarios', icon: UserCircle },
+      { name: 'Config', href: '/configuracoes', icon: Settings }
     ] : []),
   ];
 

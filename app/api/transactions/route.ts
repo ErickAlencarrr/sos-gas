@@ -31,6 +31,7 @@ export async function POST(req: Request) {
           paymentMethod: paymentMethod || null,
           returnedEmpty: type === 'OUT' ? (returnedEmpty !== undefined ? returnedEmpty : true) : null,
           emptyQuantity: type === 'IN' ? (emptyQuantity !== undefined ? parseInt(emptyQuantity) : parseInt(quantity)) : null,
+          customerId: paymentMethod === 'CLIENT' && body.customerId ? body.customerId : null
         },
         include: { product: true }
       });
@@ -55,6 +56,14 @@ export async function POST(req: Request) {
           }
         },
       });
+
+      // Se for saída FIADO para Cliente, atualiza o saldo do cliente
+      if (type === 'OUT' && paymentMethod === 'CLIENT' && body.customerId && price) {
+        await tx.customer.update({
+          where: { id: body.customerId },
+          data: { balance: { increment: parseFloat(price) } }
+        });
+      }
 
       // Se tiver boleto, cria a Conta a Pagar automaticamente
       if (type === 'IN' && hasBoleto && boletoDueDate) {
