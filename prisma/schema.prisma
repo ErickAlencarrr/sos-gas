@@ -96,6 +96,7 @@ model DailyClosing {
   pixTotal     Float    @default(0)
   cashTotal    Float    @default(0)
   cardTotal    Float    @default(0)
+  sosTotal     Float    @default(0)
 
   isClosed     Boolean  @default(false)
   transactions Transaction[]

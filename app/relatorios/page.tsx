@@ -12,6 +12,7 @@ type DailyClosing = {
   pixTotal: number;
   cashTotal: number;
   cardTotal: number;
+  sosTotal: number;
   createdAt: string;
 };
 
@@ -68,6 +69,7 @@ export default function RelatoriosPage() {
           pixTotal: 0,
           cashTotal: 0,
           cardTotal: 0,
+          sosTotal: 0,
           createdAt: closing.createdAt,
           count: 0
         };
@@ -78,6 +80,7 @@ export default function RelatoriosPage() {
       groups[key].pixTotal += closing.pixTotal;
       groups[key].cashTotal += closing.cashTotal;
       groups[key].cardTotal += closing.cardTotal;
+      groups[key].sosTotal += (closing.sosTotal || 0);
       groups[key].count += 1;
     });
 
@@ -237,10 +240,21 @@ export default function RelatoriosPage() {
               </div>
 
               {viewMode !== "DAILY" && (
-                <div className="flex justify-between text-[10px] font-bold text-slate-500 px-2 mt-3">
+                <div className="flex justify-between text-[10px] font-bold text-slate-500 px-2 mt-3 flex-wrap gap-1">
                   <span>PIX: R$ {item.pixTotal.toFixed(2).replace('.',',')}</span>
-                  <span>DINHEIRO: R$ {item.cashTotal.toFixed(2).replace('.',',')}</span>
-                  <span>CARTÃO: R$ {item.cardTotal.toFixed(2).replace('.',',')}</span>
+                  <span>DIN: R$ {item.cashTotal.toFixed(2).replace('.',',')}</span>
+                  <span>CAR: R$ {item.cardTotal.toFixed(2).replace('.',',')}</span>
+                  <span>SOS: R$ {(item.sosTotal || 0).toFixed(2).replace('.',',')}</span>
+                </div>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+    </main>
+  );
+}
+Total.toFixed(2).replace('.',',')}</span>
                 </div>
               )}
             </div>

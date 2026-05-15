@@ -184,13 +184,19 @@ export default function Home() {
                   </div>
                   <p className="text-lg font-black text-slate-800 dark:text-white">R$ {todaySummary.cashTotal.toFixed(2).replace('.',',')}</p>
                 </div>
-                <div className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-100 dark:border-slate-800 flex flex-col justify-between">
-                  <div className="flex items-center gap-1 text-slate-400 mb-1">
-                    <CreditCard className="w-4 h-4"/> <span className="text-[10px] font-black uppercase">Cartão</span>
+                <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-3xl border border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center gap-2 text-slate-500 mb-2">
+                    <CreditCard className="w-4 h-4"/> <span className="text-[10px] font-black uppercase tracking-widest">Cartão</span>
                   </div>
                   <p className="text-lg font-black text-slate-800 dark:text-white">R$ {todaySummary.cardTotal.toFixed(2).replace('.',',')}</p>
                 </div>
-              </div>
+                <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-3xl border border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center gap-2 text-slate-500 mb-2">
+                    <PackageOpen className="w-4 h-4"/> <span className="text-[10px] font-black uppercase tracking-widest">Vendas SoS</span>
+                  </div>
+                  <p className="text-lg font-black text-slate-800 dark:text-white">R$ {todaySummary.sosTotal.toFixed(2).replace('.',',')}</p>
+                </div>
+                </div>
             </section>
           )}
 
@@ -358,7 +364,7 @@ export default function Home() {
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-500 mb-2">Forma de Pagamento</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       <button type="button" onClick={() => setPaymentMethod('CASH')} className={`flex flex-col items-center gap-1 p-3 rounded-2xl border transition-all ${paymentMethod === 'CASH' ? 'bg-brand-600 text-white border-brand-600' : 'bg-white dark:bg-slate-950 text-slate-500 border-slate-200 dark:border-slate-800'}`}>
                         <Banknote className="w-6 h-6" /> <span className="text-[10px] font-black uppercase tracking-widest">Dinheiro</span>
                       </button>
@@ -367,6 +373,9 @@ export default function Home() {
                       </button>
                       <button type="button" onClick={() => setPaymentMethod('CARD')} className={`flex flex-col items-center gap-1 p-3 rounded-2xl border transition-all ${paymentMethod === 'CARD' ? 'bg-purple-500 text-white border-purple-500' : 'bg-white dark:bg-slate-950 text-slate-500 border-slate-200 dark:border-slate-800'}`}>
                         <CreditCard className="w-6 h-6" /> <span className="text-[10px] font-black uppercase tracking-widest">Cartão</span>
+                      </button>
+                      <button type="button" onClick={() => setPaymentMethod('SOS')} className={`flex flex-col items-center gap-1 p-3 rounded-2xl border transition-all ${paymentMethod === 'SOS' ? 'bg-orange-500 text-white border-orange-500' : 'bg-white dark:bg-slate-950 text-slate-500 border-slate-200 dark:border-slate-800'}`}>
+                        <PackageOpen className="w-6 h-6" /> <span className="text-[10px] font-black uppercase tracking-widest">Vendas SoS</span>
                       </button>
                     </div>
                   </div>

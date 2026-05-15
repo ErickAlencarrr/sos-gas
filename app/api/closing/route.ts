@@ -46,6 +46,7 @@ export async function POST() {
     const pixTotal = outTransactions.filter(t => t.paymentMethod === 'PIX').reduce((acc, tx) => acc + (tx.price || 0), 0);
     const cashTotal = outTransactions.filter(t => t.paymentMethod === 'CASH').reduce((acc, tx) => acc + (tx.price || 0), 0);
     const cardTotal = outTransactions.filter(t => t.paymentMethod === 'CARD').reduce((acc, tx) => acc + (tx.price || 0), 0);
+    const sosTotal = outTransactions.filter(t => t.paymentMethod === 'SOS').reduce((acc, tx) => acc + (tx.price || 0), 0);
     
     // Obtém o estoque total atual
     const products = await prisma.product.findMany();
@@ -61,6 +62,7 @@ export async function POST() {
           pixTotal,
           cashTotal,
           cardTotal,
+          sosTotal,
           isClosed: true,
         },
       });

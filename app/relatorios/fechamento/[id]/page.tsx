@@ -125,7 +125,7 @@ export default function FechamentoRelatorioPage() {
                           <td className="p-4 font-black text-center">{tx.quantity}</td>
                           <td className="p-4">
                             <span className="text-[10px] font-bold uppercase px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500">
-                              {tx.paymentMethod === 'CASH' ? 'Dinheiro' : tx.paymentMethod === 'PIX' ? 'PIX' : 'Cartão'}
+                              {tx.paymentMethod === 'CASH' ? 'Dinheiro' : tx.paymentMethod === 'PIX' ? 'PIX' : tx.paymentMethod === 'SOS' ? 'Vendas SoS' : 'Cartão'}
                             </span>
                           </td>
                           <td className="p-4 font-bold text-right text-brand-600 dark:text-brand-400">
@@ -144,6 +144,21 @@ export default function FechamentoRelatorioPage() {
             {closing.transactions && closing.transactions.length === 0 && (
               <div className="p-6 text-center text-slate-400 border border-slate-100 dark:border-slate-800 rounded-2xl">
                 Nenhuma venda registrada neste dia.
+              </div>
+            )}
+          </div>
+
+        </div>
+
+        <div className="bg-slate-50 dark:bg-slate-900/50 p-6 text-center border-t border-slate-100 dark:border-slate-800">
+          <p className="text-xs font-bold text-slate-400 uppercase">Documento Gerado Eletronicamente via SOS Gás</p>
+          <p className="text-[10px] text-slate-400 mt-1">{closing.id}</p>
+        </div>
+      </div>
+    </main>
+  );
+}
+este dia.
               </div>
             )}
           </div>
