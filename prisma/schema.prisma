@@ -11,6 +11,15 @@ datasource db {
 enum ProductType {
   GAS
   WATER
+  OTHERS
+}
+
+enum ProductUnit {
+  UNIDADE
+  PACOTE
+  METRO
+  LITRO
+  KG
 }
 
 enum TransactionType {
@@ -37,8 +46,9 @@ model Product {
   id           String        @id @default(uuid())
   name         String
   type         ProductType
-  currentStock Int           @default(0) // Cheios
-  emptyStock   Int           @default(0) // Vazios
+  unit         ProductUnit   @default(UNIDADE) // Unidade de medida
+  currentStock Int           @default(0) // Cheios ou Total (para Diversos)
+  emptyStock   Int           @default(0) // Vazios (0 para Diversos)
   transactions Transaction[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt

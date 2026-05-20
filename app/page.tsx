@@ -18,13 +18,14 @@ import {
   Banknote,
   Smartphone,
   CreditCard,
-  Check
+  Check,
+  Box
 } from "lucide-react";
 
 type Product = {
   id: string;
   name: string;
-  type: "GAS" | "WATER";
+  type: "GAS" | "WATER" | "OTHERS";
   currentStock: number;
 };
 
@@ -273,14 +274,16 @@ export default function Home() {
                 className="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-3xl shadow-sm hover:shadow-md transition-shadow border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center text-center relative overflow-hidden"
               >
                 <div className="absolute -right-4 -bottom-4 opacity-[0.03] dark:opacity-5 pointer-events-none">
-                  {product.type === 'GAS' ? <Flame className="w-32 h-32" /> : <Droplets className="w-32 h-32" />}
+                  {product.type === 'GAS' ? <Flame className="w-32 h-32" /> : product.type === 'WATER' ? <Droplets className="w-32 h-32" /> : <Box className="w-32 h-32" />}
                 </div>
                 
                 <div className="flex items-center gap-1.5 mb-3 md:mb-4 z-10">
                   {product.type === 'GAS' ? (
                     <Flame className="w-4 h-4 md:w-5 md:h-5 text-brand-500" />
-                  ) : (
+                  ) : product.type === 'WATER' ? (
                     <Droplets className="w-4 h-4 md:w-5 md:h-5 text-blue-400" />
+                  ) : (
+                    <Box className="w-4 h-4 md:w-5 md:h-5 text-amber-500" />
                   )}
                   <span className="text-xs md:text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{product.name}</span>
                 </div>

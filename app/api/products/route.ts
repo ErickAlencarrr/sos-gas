@@ -19,14 +19,15 @@ export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
     if (session?.user?.role !== 'ADMIN') return NextResponse.json({ error: 'Não autorizado' }, { status: 403 });
 
-    const { name, type, currentStock, emptyStock } = await req.json();
+    const { name, type, currentStock, emptyStock, unit } = await req.json();
 
     const product = await prisma.product.create({
       data: {
         name,
         type,
+        unit: unit || 'UNIDADE',
         currentStock: parseInt(currentStock) || 0,
-        emptyStock: parseInt(emptyStock) || 0,
+        emptyStock: type === 'OTHERS' ? 0 : (parseInt(emptyStock) || 0),
       }
     });
 

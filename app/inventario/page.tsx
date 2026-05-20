@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Layers, Flame, Droplets, PlusCircle, X, MinusCircle, FileText, Receipt, CheckCircle2 } from "lucide-react";
+import { Layers, Flame, Droplets, PlusCircle, X, MinusCircle, FileText, Receipt, CheckCircle2, Box } from "lucide-react";
 
 type Product = {
   id: string;
@@ -131,7 +131,7 @@ export default function InventarioPage() {
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 mb-6">
                   <div className="flex items-center gap-3">
                     <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-2xl">
-                      {product.type === 'GAS' ? <Flame className="w-6 h-6 text-brand-500" /> : <Droplets className="w-6 h-6 text-blue-400" />}
+                      {product.type === 'GAS' ? <Flame className="w-6 h-6 text-brand-500" /> : product.type === 'WATER' ? <Droplets className="w-6 h-6 text-blue-400" /> : <Box className="w-6 h-6 text-amber-500" />}
                     </div>
                     <h3 className="text-2xl font-black text-slate-800 dark:text-white">{product.name}</h3>
                   </div>

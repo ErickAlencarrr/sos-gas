@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PackageOpen, Edit, Trash2, Plus, X, Flame, Droplets } from "lucide-react";
+import { PackageOpen, Edit, Trash2, Plus, X, Flame, Droplets, Box } from "lucide-react";
 
 type Product = {
   id: string;
   name: string;
-  type: "GAS" | "WATER";
+  type: "GAS" | "WATER" | "OTHERS";
+  unit: "UNIDADE" | "PACOTE" | "METRO" | "LITRO" | "KG";
   currentStock: number;
   emptyStock: number;
 };
@@ -20,7 +21,8 @@ export default function ProdutosPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState("");
   const [name, setName] = useState("");
-  const [type, setType] = useState<"GAS" | "WATER">("GAS");
+  const [type, setType] = useState<"GAS" | "WATER" | "OTHERS">("GAS");
+  const [unit, setUnit] = useState<"UNIDADE" | "PACOTE" | "METRO" | "LITRO" | "KG">("UNIDADE");
   const [currentStock, setCurrentStock] = useState(0);
   const [emptyStock, setEmptyStock] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -45,6 +47,7 @@ export default function ProdutosPage() {
       setEditId(product.id);
       setName(product.name);
       setType(product.type);
+      setUnit(product.unit || "UNIDADE");
       setCurrentStock(product.currentStock);
       setEmptyStock(product.emptyStock);
     } else {
@@ -52,6 +55,7 @@ export default function ProdutosPage() {
       setEditId("");
       setName("");
       setType("GAS");
+      setUnit("UNIDADE");
       setCurrentStock(0);
       setEmptyStock(0);
     }
@@ -61,7 +65,7 @@ export default function ProdutosPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    const payload = { name, type, currentStock, emptyStock };
+    const payload = { name, type, unit, currentStock, emptyStock: type === 'OTHERS' ? 0 : emptyStock };
     const url = isEditing ? `/api/products/${editId}` : "/api/products";
     const method = isEditing ? "PUT" : "POST";
 
@@ -157,23 +161,40 @@ export default function ProdutosPage() {
                 <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Gás P13" required className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500" />
               </div>
               
-              <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Categoria</label>
-                <select value={type} onChange={(e: any) => setType(e.target.value)} className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500 font-bold">
-                  <option value="GAS">Gás</option>
-                  <option value="WATER">Água</option>
-                </select>
-              </div>
-
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Cheios (Qtd)</label>
-                  <input type="number" value={currentStock} onChange={(e) => setCurrentStock(Number(e.target.value))} required className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500 text-center text-xl font-black" />
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Categoria</label>
+                  <select value={type} onChange={(e: any) => setType(e.target.value)} className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500 font-bold">
+                    <option value="GAS">Gás</option>
+                    <option value="WATER">Água</option>
+                    <option value="OTHERS">Diversos</option>
+                  </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Vazios (Qtd)</label>
-                  <input type="number" value={emptyStock} onChange={(e) => setEmptyStock(Number(e.target.value))} required className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500 text-center text-xl font-black text-slate-400" />
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Medida</label>
+                  <select value={unit} onChange={(e: any) => setUnit(e.target.value)} className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500 font-bold">
+                    <option value="UNIDADE">Unidade (un)</option>
+                    <option value="PACOTE">Pacote (pct)</option>
+                    <option value="METRO">Metro (m)</option>
+                    <option value="KG">Quilo (kg)</option>
+                    <option value="LITRO">Litro (L)</option>
+                  </select>
                 </div>
+              </div>
+
+              <div className={`grid ${type === 'OTHERS' ? 'grid-cols-1' : 'grid-cols-2'} gap-3`}>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    {type === 'OTHERS' ? 'Quantidade Inicial' : 'Cheios (Qtd)'}
+                  </label>
+                  <input type="number" value={currentStock} onChange={(e) => setCurrentStock(Number(e.target.value))} required className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500 text-center text-xl font-black" />
+                </div>
+                {type !== 'OTHERS' && (
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Vazios (Qtd)</label>
+                    <input type="number" value={emptyStock} onChange={(e) => setEmptyStock(Number(e.target.value))} required className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500 text-center text-xl font-black text-slate-400" />
+                  </div>
+                )}
               </div>
 
               <button type="submit" disabled={isSubmitting} className="w-full p-5 mt-4 rounded-2xl text-lg font-bold text-white transition-all bg-brand-600 hover:bg-brand-700 active:scale-95 shadow-lg shadow-brand-500/25">
