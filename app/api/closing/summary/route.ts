@@ -27,10 +27,26 @@ export async function GET() {
     const totalSales = outTransactions.reduce((acc, tx) => acc + tx.quantity, 0);
     const totalRevenue = outTransactions.reduce((acc, tx) => acc + (tx.price || 0), 0);
     
-    const pixTotal = outTransactions.filter(t => t.paymentMethod === 'PIX').reduce((acc, tx) => acc + (tx.price || 0), 0);
-    const cashTotal = outTransactions.filter(t => t.paymentMethod === 'CASH').reduce((acc, tx) => acc + (tx.price || 0), 0);
-    const cardTotal = outTransactions.filter(t => t.paymentMethod === 'CARD').reduce((acc, tx) => acc + (tx.price || 0), 0);
-    const clientTotal = outTransactions.filter(t => t.paymentMethod === 'CLIENT').reduce((acc, tx) => acc + (tx.price || 0), 0);
+    const pixTotal = outTransactions.reduce((acc, tx) => {
+      if (tx.paymentMethod === 'SPLIT') return acc + (tx.pixPrice || 0);
+      if (tx.paymentMethod === 'PIX') return acc + (tx.price || 0);
+      return acc;
+    }, 0);
+    const cashTotal = outTransactions.reduce((acc, tx) => {
+      if (tx.paymentMethod === 'SPLIT') return acc + (tx.cashPrice || 0);
+      if (tx.paymentMethod === 'CASH') return acc + (tx.price || 0);
+      return acc;
+    }, 0);
+    const cardTotal = outTransactions.reduce((acc, tx) => {
+      if (tx.paymentMethod === 'SPLIT') return acc + (tx.cardPrice || 0);
+      if (tx.paymentMethod === 'CARD') return acc + (tx.price || 0);
+      return acc;
+    }, 0);
+    const clientTotal = outTransactions.reduce((acc, tx) => {
+      if (tx.paymentMethod === 'SPLIT') return acc + (tx.clientPrice || 0);
+      if (tx.paymentMethod === 'CLIENT') return acc + (tx.price || 0);
+      return acc;
+    }, 0);
 
     return NextResponse.json({
       totalSales,

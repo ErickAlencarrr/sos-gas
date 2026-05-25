@@ -29,9 +29,16 @@ export async function POST(req: Request) {
           isBoletoPaid: isBoletoPaid || false,
           price: price ? parseFloat(price) : null,
           paymentMethod: paymentMethod || null,
+          
+          // Novos campos para split
+          cashPrice: paymentMethod === 'SPLIT' && body.splitValues ? parseFloat(body.splitValues.cash) : 0,
+          pixPrice: paymentMethod === 'SPLIT' && body.splitValues ? parseFloat(body.splitValues.pix) : 0,
+          cardPrice: paymentMethod === 'SPLIT' && body.splitValues ? parseFloat(body.splitValues.card) : 0,
+          clientPrice: paymentMethod === 'SPLIT' && body.splitValues ? parseFloat(body.splitValues.client) : 0,
+
           returnedEmpty: type === 'OUT' ? (returnedEmpty !== undefined ? returnedEmpty : true) : null,
           emptyQuantity: type === 'IN' ? (emptyQuantity !== undefined ? parseInt(emptyQuantity) : parseInt(quantity)) : null,
-          customerId: paymentMethod === 'CLIENT' && body.customerId ? body.customerId : null
+          customerId: (paymentMethod === 'CLIENT' || (paymentMethod === 'SPLIT' && body.splitValues?.client > 0)) && body.customerId ? body.customerId : null
         },
         include: { product: true }
       });
@@ -57,12 +64,19 @@ export async function POST(req: Request) {
         },
       });
 
-      // Se for saída FIADO para Cliente, atualiza o saldo do cliente
-      if (type === 'OUT' && paymentMethod === 'CLIENT' && body.customerId && price) {
-        await tx.customer.update({
-          where: { id: body.customerId },
-          data: { balance: { increment: parseFloat(price) } }
-        });
+      // Se for saída FIADO para Cliente ou SPLIT com valor cliente, atualiza o saldo do cliente
+      if (type === 'OUT' && body.customerId) {
+        if (paymentMethod === 'CLIENT' && price) {
+          await tx.customer.update({
+            where: { id: body.customerId },
+            data: { balance: { increment: parseFloat(price) } }
+          });
+        } else if (paymentMethod === 'SPLIT' && body.splitValues && body.splitValues.client > 0) {
+          await tx.customer.update({
+            where: { id: body.customerId },
+            data: { balance: { increment: parseFloat(body.splitValues.client) } }
+          });
+        }
       }
 
       // Se tiver boleto, cria a Conta a Pagar automaticamente

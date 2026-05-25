@@ -78,7 +78,14 @@ model Transaction {
   
   // Campos de Venda (Saída)
   price         Float?          // Valor total cobrado na venda
-  paymentMethod String?         // Forma de pagamento (PIX, CASH, CARD, CLIENT...)
+  paymentMethod String?         // Forma de pagamento (PIX, CASH, CARD, CLIENT, SPLIT...)
+  
+  // Valores divididos (quando paymentMethod == 'SPLIT')
+  cashPrice     Float?          @default(0)
+  pixPrice      Float?          @default(0)
+  cardPrice     Float?          @default(0)
+  clientPrice   Float?          @default(0)
+
   returnedEmpty Boolean?        @default(true) // Cliente devolveu o vasilhame?
 
   // Campos de Entrada (Notas e Boletos)

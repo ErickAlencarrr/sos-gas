@@ -53,6 +53,10 @@ export default function Home() {
   const [paymentMethod, setPaymentMethod] = useState("CASH");
   const [returnedEmpty, setReturnedEmpty] = useState(true);
   
+  // Pagamento Múltiplo (Split)
+  const [isSplitPayment, setIsSplitPayment] = useState(false);
+  const [splitValues, setSplitValues] = useState({ cash: "", pix: "", card: "", client: "" });
+  
   // Campos de Cliente
   const [selectedCustomer, setSelectedCustomer] = useState("");
   const [newCustomerName, setNewCustomerName] = useState("");
@@ -102,6 +106,8 @@ export default function Home() {
     setQuantity(1);
     setPrice("");
     setPaymentMethod("CASH");
+    setIsSplitPayment(false);
+    setSplitValues({ cash: "", pix: "", card: "", client: "" });
     setReturnedEmpty(true);
     setSelectedCustomer("");
     setNewCustomerName("");
@@ -136,9 +142,22 @@ export default function Home() {
   const handleTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedProduct || quantity <= 0) return;
-    if (paymentMethod === 'CLIENT' && !selectedCustomer) {
-      alert("Selecione um cliente para a Conta Cliente.");
-      return;
+    
+    if (isSplitPayment) {
+      const sum = (parseFloat(splitValues.cash || "0") + parseFloat(splitValues.pix || "0") + parseFloat(splitValues.card || "0") + parseFloat(splitValues.client || "0")).toFixed(2);
+      if (sum !== parseFloat(price || "0").toFixed(2)) {
+        alert(`A soma dos valores divididos (R$ ${sum}) não bate com o Valor Total (R$ ${parseFloat(price || "0").toFixed(2)}).`);
+        return;
+      }
+      if (parseFloat(splitValues.client || "0") > 0 && !selectedCustomer) {
+        alert("Selecione um cliente para o valor na Conta Cliente.");
+        return;
+      }
+    } else {
+      if (paymentMethod === 'CLIENT' && !selectedCustomer) {
+        alert("Selecione um cliente para a Conta Cliente.");
+        return;
+      }
     }
     
     setIsSubmitting(true);
@@ -148,9 +167,10 @@ export default function Home() {
         type: 'OUT',
         quantity: Number(quantity),
         price: price,
-        paymentMethod: paymentMethod,
+        paymentMethod: isSplitPayment ? 'SPLIT' : paymentMethod,
+        splitValues: isSplitPayment ? splitValues : undefined,
         returnedEmpty: returnedEmpty,
-        customerId: paymentMethod === 'CLIENT' ? selectedCustomer : null
+        customerId: (isSplitPayment && parseFloat(splitValues.client || "0") > 0) || (!isSplitPayment && paymentMethod === 'CLIENT') ? selectedCustomer : null
       };
 
       const res = await fetch("/api/transactions", {
@@ -419,22 +439,55 @@ export default function Home() {
                   <div>
                     <label className="block text-xs font-bold text-slate-500 mb-2">Forma de Pagamento</label>
                     <div className="grid grid-cols-2 gap-2">
-                      <button type="button" onClick={() => setPaymentMethod('CASH')} className={`flex flex-col items-center gap-1 p-3 rounded-2xl border transition-all ${paymentMethod === 'CASH' ? 'bg-brand-600 text-white border-brand-600' : 'bg-white dark:bg-slate-950 text-slate-500 border-slate-200 dark:border-slate-800'}`}>
+                      <button type="button" onClick={() => { setPaymentMethod('CASH'); setIsSplitPayment(false); }} className={`flex flex-col items-center gap-1 p-3 rounded-2xl border transition-all ${paymentMethod === 'CASH' && !isSplitPayment ? 'bg-brand-600 text-white border-brand-600' : 'bg-white dark:bg-slate-950 text-slate-500 border-slate-200 dark:border-slate-800'}`}>
                         <Banknote className="w-6 h-6" /> <span className="text-[10px] font-black uppercase tracking-widest">Dinheiro</span>
                       </button>
-                      <button type="button" onClick={() => setPaymentMethod('PIX')} className={`flex flex-col items-center gap-1 p-3 rounded-2xl border transition-all ${paymentMethod === 'PIX' ? 'bg-teal-500 text-white border-teal-500' : 'bg-white dark:bg-slate-950 text-slate-500 border-slate-200 dark:border-slate-800'}`}>
+                      <button type="button" onClick={() => { setPaymentMethod('PIX'); setIsSplitPayment(false); }} className={`flex flex-col items-center gap-1 p-3 rounded-2xl border transition-all ${paymentMethod === 'PIX' && !isSplitPayment ? 'bg-teal-500 text-white border-teal-500' : 'bg-white dark:bg-slate-950 text-slate-500 border-slate-200 dark:border-slate-800'}`}>
                         <Smartphone className="w-6 h-6" /> <span className="text-[10px] font-black uppercase tracking-widest">PIX</span>
                       </button>
-                      <button type="button" onClick={() => setPaymentMethod('CARD')} className={`flex flex-col items-center gap-1 p-3 rounded-2xl border transition-all ${paymentMethod === 'CARD' ? 'bg-purple-500 text-white border-purple-500' : 'bg-white dark:bg-slate-950 text-slate-500 border-slate-200 dark:border-slate-800'}`}>
+                      <button type="button" onClick={() => { setPaymentMethod('CARD'); setIsSplitPayment(false); }} className={`flex flex-col items-center gap-1 p-3 rounded-2xl border transition-all ${paymentMethod === 'CARD' && !isSplitPayment ? 'bg-purple-500 text-white border-purple-500' : 'bg-white dark:bg-slate-950 text-slate-500 border-slate-200 dark:border-slate-800'}`}>
                         <CreditCard className="w-6 h-6" /> <span className="text-[10px] font-black uppercase tracking-widest">Cartão</span>
                       </button>
-                      <button type="button" onClick={() => setPaymentMethod('CLIENT')} className={`flex flex-col items-center gap-1 p-3 rounded-2xl border transition-all ${paymentMethod === 'CLIENT' ? 'bg-orange-500 text-white border-orange-500' : 'bg-white dark:bg-slate-950 text-slate-500 border-slate-200 dark:border-slate-800'}`}>
+                      <button type="button" onClick={() => { setPaymentMethod('CLIENT'); setIsSplitPayment(false); }} className={`flex flex-col items-center gap-1 p-3 rounded-2xl border transition-all ${paymentMethod === 'CLIENT' && !isSplitPayment ? 'bg-orange-500 text-white border-orange-500' : 'bg-white dark:bg-slate-950 text-slate-500 border-slate-200 dark:border-slate-800'}`}>
                         <PackageOpen className="w-6 h-6" /> <span className="text-[10px] font-black uppercase tracking-widest">Conta Cliente</span>
                       </button>
                     </div>
                   </div>
 
-                  {paymentMethod === 'CLIENT' && (
+                  <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 mt-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Pagamento Múltiplo (Dividir)</span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" className="sr-only peer" checked={isSplitPayment} onChange={(e) => { setIsSplitPayment(e.target.checked); if (e.target.checked) setPaymentMethod(''); }} />
+                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-brand-500"></div>
+                    </label>
+                  </div>
+
+                  {isSplitPayment && (
+                    <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Dividir os valores</p>
+                      
+                      <div className="flex items-center gap-3">
+                        <Banknote className="w-5 h-5 text-brand-500 shrink-0" />
+                        <input type="number" step="0.01" placeholder="Dinheiro" className="w-full p-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-bold outline-none" value={splitValues.cash} onChange={e => setSplitValues({...splitValues, cash: e.target.value})} />
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Smartphone className="w-5 h-5 text-teal-500 shrink-0" />
+                        <input type="number" step="0.01" placeholder="PIX" className="w-full p-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-bold outline-none" value={splitValues.pix} onChange={e => setSplitValues({...splitValues, pix: e.target.value})} />
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <CreditCard className="w-5 h-5 text-purple-500 shrink-0" />
+                        <input type="number" step="0.01" placeholder="Cartão" className="w-full p-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-bold outline-none" value={splitValues.card} onChange={e => setSplitValues({...splitValues, card: e.target.value})} />
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <PackageOpen className="w-5 h-5 text-orange-500 shrink-0" />
+                        <input type="number" step="0.01" placeholder="Conta Cliente" className="w-full p-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-bold outline-none" value={splitValues.client} onChange={e => setSplitValues({...splitValues, client: e.target.value})} />
+                      </div>
+                    </div>
+                  )}
+
+                  {(paymentMethod === 'CLIENT' || (isSplitPayment && parseFloat(splitValues.client || "0") > 0)) && (
                     <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-2xl border border-orange-100 dark:border-orange-800/30">
                       <label className="block text-xs font-bold text-orange-600 dark:text-orange-400 mb-2">Selecione o Cliente</label>
                       {!isCreatingCustomer ? (
