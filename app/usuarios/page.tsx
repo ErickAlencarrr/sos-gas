@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { UserCircle, Trash2, Edit, Plus, X } from "lucide-react";
+import { toast } from "sonner";
 
 type User = {
   id: string;
@@ -23,6 +24,9 @@ export default function UsuariosPage() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"ADMIN" | "EMPLOYEE">("EMPLOYEE");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   const fetchUsers = async () => {
     setIsLoading(true);
@@ -81,14 +85,20 @@ export default function UsuariosPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Tem certeza que deseja remover este usuário?")) return;
+  const handleDelete = async () => {
+    if (!selectedUser) return;
+    setIsSubmitting(true);
     try {
-      const res = await fetch(`/api/users/${id}`, { method: "DELETE" });
-      if (res.ok) fetchUsers();
-      else alert("Erro ao deletar.");
+      const res = await fetch(`/api/users/${selectedUser.id}`, { method: "DELETE" });
+      if (res.ok) {
+        setIsDeleteModalOpen(false);
+        fetchUsers();
+      }
+      else toast.error("Erro ao deletar.");
     } catch {
-      alert("Erro de conexão.");
+      toast.error("Erro de conexão.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -132,7 +142,7 @@ export default function UsuariosPage() {
                     </td>
                     <td className="p-5 flex justify-end gap-2">
                       <button onClick={() => openModal(user)} className="p-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"><Edit className="w-4 h-4"/></button>
-                      <button onClick={() => handleDelete(user.id)} className="p-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"><Trash2 className="w-4 h-4"/></button>
+                      <button onClick={() => { setSelectedUser(user); setIsDeleteModalOpen(true); }} className="p-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"><Trash2 className="w-4 h-4"/></button>
                     </td>
                   </tr>
                 ))}
@@ -176,6 +186,51 @@ export default function UsuariosPage() {
                 {isSubmitting ? 'Salvando...' : 'Salvar Usuário'}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE EXCLUSÃO */}
+      {isDeleteModalOpen && selectedUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm" onClick={() => setIsDeleteModalOpen(false)}></div>
+          <div className="bg-white dark:bg-slate-950 w-full max-w-md rounded-3xl p-6 md:p-8 shadow-2xl relative z-10 border border-red-500 dark:border-red-900/50 animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-start mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-2xl">
+                  <Trash2 className="w-8 h-8" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">Remover Usuário</h3>
+                </div>
+              </div>
+              <button onClick={() => setIsDeleteModalOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-900 rounded-full text-slate-500 hover:bg-slate-200">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="mb-6 space-y-4">
+              <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                Tem certeza que deseja remover o usuário <strong className="text-slate-800 dark:text-white">{selectedUser.name}</strong>?
+              </p>
+              <p className="text-xs text-slate-500">Ele perderá o acesso ao sistema imediatamente.</p>
+            </div>
+
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="flex-1 p-4 rounded-2xl font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={handleDelete}
+                disabled={isSubmitting} 
+                className="flex-1 p-4 rounded-2xl font-bold text-white transition-all bg-red-600 hover:bg-red-700 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? 'Removendo...' : 'Sim, Remover'}
+              </button>
+            </div>
           </div>
         </div>
       )}
