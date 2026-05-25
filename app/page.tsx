@@ -66,6 +66,23 @@ export default function Home() {
   const [todaySummary, setTodaySummary] = useState<any>(null);
   const [isClosingModalOpen, setIsClosingModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Vendas de Hoje (Histórico Diário)
+  const [isTodaySalesModalOpen, setIsTodaySalesModalOpen] = useState(false);
+  const [todaySales, setTodaySales] = useState<any[]>([]);
+  const [isLoadingTodaySales, setIsLoadingTodaySales] = useState(false);
+
+  const fetchTodaySales = async () => {
+    setIsLoadingTodaySales(true);
+    try {
+      const res = await fetch("/api/transactions/today");
+      if (res.ok) setTodaySales(await res.json());
+    } catch(e) {
+      console.error(e);
+    } finally {
+      setIsLoadingTodaySales(false);
+    }
+  };
 
   const fetchSummary = async () => {
     try {
@@ -346,10 +363,21 @@ export default function Home() {
                 <div className="h-px bg-slate-200 dark:bg-slate-800 w-full rounded-full"></div>
               </div>
 
+              <button 
+                onClick={() => {
+                  fetchTodaySales();
+                  setIsTodaySalesModalOpen(true);
+                }} 
+                className="w-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 p-4 md:p-5 rounded-2xl md:rounded-3xl flex items-center justify-center space-x-3 transition-all"
+              >
+                <FileText className="w-6 h-6 stroke-2 text-slate-500" />
+                <span className="text-lg md:text-xl font-bold tracking-wide">Vendas de Hoje</span>
+              </button>
+
               {isAdmin && (
                 <button 
                   onClick={() => setIsClosingModalOpen(true)} 
-                  className="w-full bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 p-4 md:p-5 rounded-2xl md:rounded-3xl flex items-center justify-center space-x-3 transition-all"
+                  className="w-full bg-brand-50 hover:bg-brand-100 dark:bg-brand-900/20 dark:hover:bg-brand-900/40 border-2 border-brand-200 dark:border-brand-800/30 text-brand-700 dark:text-brand-400 p-4 md:p-5 rounded-2xl md:rounded-3xl flex items-center justify-center space-x-3 transition-all mt-2"
                 >
                   <Wallet className="w-6 h-6 stroke-2 text-brand-500" />
                   <span className="text-lg md:text-xl font-bold tracking-wide">Fechar Caixa</span>
@@ -621,6 +649,77 @@ export default function Home() {
             >
               {isSubmitting ? 'Registrando...' : <><Check className="w-5 h-5"/> Confirmar Fechamento</>}
             </button>
+          </div>
+        </div>
+      )}
+      {/* MODAL DE VENDAS DE HOJE */}
+      {isTodaySalesModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm" onClick={() => setIsTodaySalesModalOpen(false)}></div>
+          <div className="bg-white dark:bg-slate-950 w-full max-w-2xl rounded-3xl p-6 md:p-8 shadow-2xl relative z-10 border border-slate-100 dark:border-slate-800 animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+            
+            <div className="flex justify-between items-start mb-6 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 rounded-2xl">
+                  <FileText className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">Vendas de Hoje</h3>
+                  <span className="text-sm font-bold text-slate-500">Transações do caixa atual</span>
+                </div>
+              </div>
+              <button onClick={() => setIsTodaySalesModalOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-900 rounded-full text-slate-500 hover:bg-slate-200">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto pr-2 min-h-[300px]">
+              {isLoadingTodaySales ? (
+                <div className="flex justify-center items-center h-full text-slate-400 font-bold">Carregando vendas...</div>
+              ) : todaySales.length === 0 ? (
+                <div className="flex flex-col justify-center items-center h-full text-slate-400">
+                  <FileText className="w-12 h-12 mb-2 opacity-50" />
+                  <span className="font-bold">Nenhuma venda registrada hoje.</span>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {todaySales.map((tx: any) => (
+                    <div key={tx.id} className="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 flex justify-between items-center">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-bold text-slate-800 dark:text-white">{tx.product?.name || "Produto"}</p>
+                          {tx.returnedEmpty === false && (
+                            <span className="bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 text-[10px] font-bold px-2 py-0.5 rounded-full" title="Não devolveu vasilhame">Sem Vasilhame</span>
+                          )}
+                        </div>
+                        <div className="text-xs text-slate-500 font-medium mt-1 flex flex-col gap-1">
+                          <span>
+                            {new Date(tx.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} 
+                            {tx.paymentMethod === 'CASH' && ' • Dinheiro'}
+                            {tx.paymentMethod === 'PIX' && ' • PIX'}
+                            {tx.paymentMethod === 'CARD' && ' • Cartão'}
+                            {tx.paymentMethod === 'CLIENT' && tx.customer && ` • Cliente: ${tx.customer.name}`}
+                            {tx.paymentMethod === 'SPLIT' && ` • Pagamento Múltiplo`}
+                          </span>
+                          {tx.paymentMethod === 'SPLIT' && (
+                            <span className="text-[10px] text-slate-400 font-bold bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg inline-block w-fit mt-1">
+                              {tx.cashPrice > 0 && `Dinheiro: R$ ${tx.cashPrice.toFixed(2).replace('.',',')} | `}
+                              {tx.pixPrice > 0 && `PIX: R$ ${tx.pixPrice.toFixed(2).replace('.',',')} | `}
+                              {tx.cardPrice > 0 && `Cartão: R$ ${tx.cardPrice.toFixed(2).replace('.',',')} | `}
+                              {tx.clientPrice > 0 && `Cliente: R$ ${tx.clientPrice.toFixed(2).replace('.',',')} `}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0 ml-4">
+                        <p className="font-black text-slate-800 dark:text-white">Qtd: {tx.quantity}</p>
+                        <p className="text-sm font-bold text-brand-600 dark:text-brand-400">R$ {tx.price ? tx.price.toFixed(2).replace('.', ',') : "0,00"}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
