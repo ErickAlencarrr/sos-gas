@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { Users, Search, DollarSign, CheckCircle2, UserCircle2, Wallet, X, Edit, Trash2, ShieldAlert, History } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { toast } from "sonner";
+
+import { maskCurrency, unmaskCurrency } from "@/lib/mask";
 
 type Customer = {
   id: string;
@@ -87,7 +90,7 @@ export default function ClientesPage() {
         setIsPayModalOpen(false);
         fetchCustomers();
       } else {
-        alert("Erro ao processar pagamento");
+        toast.error("Erro ao processar pagamento");
       }
     } catch (error) {
       alert("Erro de conexão");
@@ -318,12 +321,10 @@ export default function ClientesPage() {
               <div className="mb-6">
                 <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-widest">Valor Pago (R$)</label>
                 <input 
-                  type="number" 
-                  step="0.01" 
-                  max={selectedCustomer.balance}
+                  type="text" 
                   className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-2xl font-black text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-orange-500" 
                   value={payAmount} 
-                  onChange={(e) => setPayAmount(e.target.value)} 
+                  onChange={(e) => setPayAmount(maskCurrency(e.target.value))} 
                   required 
                   autoFocus
                 />

@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { maskCurrency, unmaskCurrency } from "@/lib/mask";
 import { 
   PlusCircle, 
   MinusCircle, 
@@ -160,19 +162,25 @@ export default function Home() {
     e.preventDefault();
     if (!selectedProduct || quantity <= 0) return;
     
+    const unmaskedPrice = unmaskCurrency(price);
+    const unmaskedCash = unmaskCurrency(splitValues.cash);
+    const unmaskedPix = unmaskCurrency(splitValues.pix);
+    const unmaskedCard = unmaskCurrency(splitValues.card);
+    const unmaskedClient = unmaskCurrency(splitValues.client);
+
     if (isSplitPayment) {
-      const sum = (parseFloat(splitValues.cash || "0") + parseFloat(splitValues.pix || "0") + parseFloat(splitValues.card || "0") + parseFloat(splitValues.client || "0")).toFixed(2);
-      if (sum !== parseFloat(price || "0").toFixed(2)) {
-        alert(`A soma dos valores divididos (R$ ${sum}) não bate com o Valor Total (R$ ${parseFloat(price || "0").toFixed(2)}).`);
+      const sum = (parseFloat(unmaskedCash) + parseFloat(unmaskedPix) + parseFloat(unmaskedCard) + parseFloat(unmaskedClient)).toFixed(2);
+      if (sum !== parseFloat(unmaskedPrice).toFixed(2)) {
+        toast.warning(`A soma dos valores divididos (R$ ${sum.replace('.', ',')}) não bate com o Valor Total (R$ ${parseFloat(unmaskedPrice).toFixed(2).replace('.', ',')}).`);
         return;
       }
-      if (parseFloat(splitValues.client || "0") > 0 && !selectedCustomer) {
-        alert("Selecione um cliente para o valor na Conta Cliente.");
+      if (parseFloat(unmaskedClient) > 0 && !selectedCustomer) {
+        toast.warning("Selecione um cliente para o valor na Conta Cliente.");
         return;
       }
     } else {
       if (paymentMethod === 'CLIENT' && !selectedCustomer) {
-        alert("Selecione um cliente para a Conta Cliente.");
+        toast.warning("Selecione um cliente para a Conta Cliente.");
         return;
       }
     }
@@ -183,11 +191,11 @@ export default function Home() {
         productId: selectedProduct,
         type: 'OUT',
         quantity: Number(quantity),
-        price: price,
+        price: unmaskedPrice,
         paymentMethod: isSplitPayment ? 'SPLIT' : paymentMethod,
-        splitValues: isSplitPayment ? splitValues : undefined,
+        splitValues: isSplitPayment ? { cash: unmaskedCash, pix: unmaskedPix, card: unmaskedCard, client: unmaskedClient } : undefined,
         returnedEmpty: returnedEmpty,
-        customerId: (isSplitPayment && parseFloat(splitValues.client || "0") > 0) || (!isSplitPayment && paymentMethod === 'CLIENT') ? selectedCustomer : null
+        customerId: (isSplitPayment && parseFloat(unmaskedClient) > 0) || (!isSplitPayment && paymentMethod === 'CLIENT') ? selectedCustomer : null
       };
 
       const res = await fetch("/api/transactions", {
@@ -196,13 +204,14 @@ export default function Home() {
         body: JSON.stringify(payload)
       });
       if(res.ok) {
+        toast.success("Venda registrada com sucesso!");
         setIsModalOpen(false);
         fetchProducts();
       } else {
-        alert("Erro ao salvar transação");
+        toast.error("Erro ao salvar transação");
       }
     } catch (error) {
-      alert("Erro de conexão");
+      toast.error("Erro de conexão");
     } finally {
       setIsSubmitting(false);
     }
@@ -455,12 +464,11 @@ export default function Home() {
                   <div>
                     <label className="block text-xs font-bold text-slate-500 mb-1">Valor Total Cobrado (R$)</label>
                     <input 
-                      type="number" 
-                      step="0.01" 
-                      placeholder="Ex: 110.00"
+                      type="text" 
+                      placeholder="Ex: 110,00"
                       className="w-full p-4 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-xl font-bold outline-none focus:ring-2 focus:ring-brand-500" 
                       value={price} 
-                      onChange={(e) => setPrice(e.target.value)} 
+                      onChange={(e) => setPrice(maskCurrency(e.target.value))} 
                       required 
                     />
                   </div>
@@ -498,19 +506,19 @@ export default function Home() {
                       
                       <div className="flex items-center gap-3">
                         <Banknote className="w-5 h-5 text-brand-500 shrink-0" />
-                        <input type="number" step="0.01" placeholder="Dinheiro" className="w-full p-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-bold outline-none" value={splitValues.cash} onChange={e => setSplitValues({...splitValues, cash: e.target.value})} />
+                        <input type="text" placeholder="Dinheiro" className="w-full p-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-bold outline-none" value={splitValues.cash} onChange={e => setSplitValues({...splitValues, cash: maskCurrency(e.target.value)})} />
                       </div>
                       <div className="flex items-center gap-3">
                         <Smartphone className="w-5 h-5 text-teal-500 shrink-0" />
-                        <input type="number" step="0.01" placeholder="PIX" className="w-full p-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-bold outline-none" value={splitValues.pix} onChange={e => setSplitValues({...splitValues, pix: e.target.value})} />
+                        <input type="text" placeholder="PIX" className="w-full p-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-bold outline-none" value={splitValues.pix} onChange={e => setSplitValues({...splitValues, pix: maskCurrency(e.target.value)})} />
                       </div>
                       <div className="flex items-center gap-3">
                         <CreditCard className="w-5 h-5 text-purple-500 shrink-0" />
-                        <input type="number" step="0.01" placeholder="Cartão" className="w-full p-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-bold outline-none" value={splitValues.card} onChange={e => setSplitValues({...splitValues, card: e.target.value})} />
+                        <input type="text" placeholder="Cartão" className="w-full p-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-bold outline-none" value={splitValues.card} onChange={e => setSplitValues({...splitValues, card: maskCurrency(e.target.value)})} />
                       </div>
                       <div className="flex items-center gap-3">
                         <PackageOpen className="w-5 h-5 text-orange-500 shrink-0" />
-                        <input type="number" step="0.01" placeholder="Conta Cliente" className="w-full p-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-bold outline-none" value={splitValues.client} onChange={e => setSplitValues({...splitValues, client: e.target.value})} />
+                        <input type="text" placeholder="Conta Cliente" className="w-full p-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-bold outline-none" value={splitValues.client} onChange={e => setSplitValues({...splitValues, client: maskCurrency(e.target.value)})} />
                       </div>
                     </div>
                   )}

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { Settings, AlertOctagon, PackageX, ArchiveX, Trash2, Calendar, ShieldAlert, X } from "lucide-react";
+import { toast } from "sonner";
 
 export default function ConfiguracoesPage() {
   const { data: session } = useSession();
@@ -59,10 +60,10 @@ export default function ConfiguracoesPage() {
         alert("Ação executada com sucesso!");
         closeModal();
       } else {
-        alert("Erro ao executar ação.");
+        toast.error("Erro ao executar ação.");
       }
     } catch (e) {
-      alert("Erro de conexão.");
+      toast.error("Erro de conexão.");
     } finally {
       setIsSubmitting(false);
     }

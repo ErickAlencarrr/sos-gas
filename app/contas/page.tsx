@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { WalletCards, CheckCircle2, XCircle, Plus, X, Receipt, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { maskCurrency, unmaskCurrency } from "@/lib/mask";
 
 type Bill = {
   id: string;
@@ -25,6 +27,9 @@ export default function ContasPage() {
   const [isRecurring, setIsRecurring] = useState(false);
   const [isPaid, setIsPaid] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
 
   const fetchBills = async () => {
     setIsLoading(true);
@@ -49,21 +54,29 @@ export default function ContasPage() {
     setIsModalOpen(true);
   };
 
+  const openDeleteModal = (bill: Bill) => {
+    setSelectedBill(bill);
+    setIsDeleteModalOpen(true);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
+      const unmaskedAmount = unmaskCurrency(amount);
       const res = await fetch("/api/bills", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, amount, dueDate, isRecurring, isPaid })
+        body: JSON.stringify({ title, amount: unmaskedAmount, dueDate, isRecurring, isPaid })
       });
       if (res.ok) {
         setIsModalOpen(false);
         fetchBills();
+      } else {
+        toast.error("Erro ao salvar a conta.");
       }
     } catch {
-      alert("Erro de conexão.");
+      toast.error("Erro de conexão.");
     } finally {
       setIsSubmitting(false);
     }
@@ -78,17 +91,25 @@ export default function ContasPage() {
       });
       if (res.ok) fetchBills();
     } catch {
-      alert("Erro ao atualizar.");
+      toast.error("Erro ao atualizar.");
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Remover esta conta de forma definitiva?")) return;
+  const handleDelete = async () => {
+    if (!selectedBill) return;
+    setIsSubmitting(true);
     try {
-      const res = await fetch(`/api/bills/${id}`, { method: "DELETE" });
-      if (res.ok) fetchBills();
+      const res = await fetch(`/api/bills/${selectedBill.id}`, { method: "DELETE" });
+      if (res.ok) {
+        setIsDeleteModalOpen(false);
+        fetchBills();
+      } else {
+        toast.error("Erro ao deletar.");
+      }
     } catch {
-      alert("Erro de conexão.");
+      toast.error("Erro de conexão.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -149,7 +170,7 @@ export default function ContasPage() {
                     {bill.isPaid ? <XCircle className="w-5 h-5"/> : <CheckCircle2 className="w-5 h-5"/>}
                     {bill.isPaid ? 'Desfazer' : 'Marcar Pago'}
                   </button>
-                  <button onClick={() => handleDelete(bill.id)} className="p-3 bg-red-50 text-red-500 rounded-xl hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 transition-colors">
+                  <button onClick={() => openDeleteModal(bill)} className="p-3 bg-red-50 text-red-500 rounded-xl hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 transition-colors">
                     <Trash2 className="w-5 h-5" />
                   </button>
                 </div>
@@ -176,7 +197,7 @@ export default function ContasPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Valor (R$)</label>
-                  <input type="number" step="0.01" placeholder="0,00" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500" />
+                  <input type="text" placeholder="0,00" value={amount} onChange={(e) => setAmount(maskCurrency(e.target.value))} className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-brand-500" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Vencimento</label>
@@ -204,6 +225,54 @@ export default function ContasPage() {
                 {isSubmitting ? 'Salvando...' : 'Adicionar Conta'}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE EXCLUSÃO */}
+      {isDeleteModalOpen && selectedBill && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm" onClick={() => setIsDeleteModalOpen(false)}></div>
+          <div className="bg-white dark:bg-slate-950 w-full max-w-md rounded-3xl p-6 md:p-8 shadow-2xl relative z-10 border border-red-500 dark:border-red-900/50 animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-start mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-2xl">
+                  <Trash2 className="w-8 h-8" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">Remover Conta</h3>
+                </div>
+              </div>
+              <button onClick={() => setIsDeleteModalOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-900 rounded-full text-slate-500 hover:bg-slate-200">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="mb-6 space-y-4">
+              <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                Tem certeza que deseja remover esta conta permanentemente?
+              </p>
+              <div className="p-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl">
+                <p className="font-bold text-slate-800 dark:text-white">{selectedBill.title}</p>
+                <p className="text-sm text-slate-500">Valor: R$ {selectedBill.amount?.toFixed(2).replace('.', ',')}</p>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="flex-1 p-4 rounded-2xl font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={handleDelete}
+                disabled={isSubmitting} 
+                className="flex-1 p-4 rounded-2xl font-bold text-white transition-all bg-red-600 hover:bg-red-700 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? 'Removendo...' : 'Sim, Remover'}
+              </button>
+            </div>
           </div>
         </div>
       )}

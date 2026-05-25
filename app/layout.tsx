@@ -2,6 +2,7 @@ import { AuthProvider } from "@/components/AuthProvider";
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import { Navbar } from "@/components/Navbar";
+import { Toaster } from 'sonner';
 
 export const viewport: Viewport = {
   themeColor: [
@@ -28,6 +29,7 @@ export default function RootLayout({
     <html lang="pt-BR">
       <body className="antialiased text-slate-900 bg-blue-50 dark:bg-slate-950 dark:text-slate-100 min-h-screen selection:bg-blue-200 dark:selection:bg-blue-900 flex flex-col md:block">
         <AuthProvider>
+          <Toaster position="top-center" richColors />
           <Navbar />
           <div className="flex-1 max-w-7xl mx-auto w-full relative">
             {children}
