@@ -50,6 +50,7 @@ export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState("");
   const [quantity, setQuantity] = useState(1);
+  const [editTransactionId, setEditTransactionId] = useState("");
 
   // Campos de Venda (Saída)
   const [price, setPrice] = useState("");
@@ -85,6 +86,37 @@ export default function Home() {
     } finally {
       setIsLoadingTodaySales(false);
     }
+  };
+
+  const handleEditClick = (tx: any) => {
+    setEditTransactionId(tx.id);
+    setSelectedProduct(tx.productId);
+    setQuantity(tx.quantity);
+    setPrice(tx.price ? tx.price.toFixed(2).replace('.', ',') : "");
+    setPaymentMethod(tx.paymentMethod === 'SPLIT' ? 'SPLIT' : (tx.paymentMethod || 'CASH'));
+    setReturnedEmpty(tx.returnedEmpty !== false);
+    
+    if (tx.paymentMethod === 'SPLIT') {
+      setIsSplitPayment(true);
+      setSplitValues({
+        cash: tx.cashPrice ? tx.cashPrice.toFixed(2).replace('.', ',') : "",
+        pix: tx.pixPrice ? tx.pixPrice.toFixed(2).replace('.', ',') : "",
+        card: tx.cardPrice ? tx.cardPrice.toFixed(2).replace('.', ',') : "",
+        client: tx.clientPrice ? tx.clientPrice.toFixed(2).replace('.', ',') : "",
+      });
+    } else {
+      setIsSplitPayment(false);
+      setSplitValues({ cash: "", pix: "", card: "", client: "" });
+    }
+    
+    if (tx.customerId) {
+      setSelectedCustomer(tx.customerId);
+    } else {
+      setSelectedCustomer("");
+    }
+    
+    setIsTodaySalesModalOpen(false);
+    setIsModalOpen(true);
   };
 
   const handleDeleteTransaction = async (id: string) => {
