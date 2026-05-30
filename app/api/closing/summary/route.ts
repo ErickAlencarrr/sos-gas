@@ -22,6 +22,8 @@ export async function GET() {
         dailyClosingId: null,
         createdAt: { gte: startOfToday },
       },
+      include: { product: true },
+      orderBy: { createdAt: 'desc' }
     });
 
     const totalSales = outTransactions.reduce((acc, tx) => acc + tx.quantity, 0);
@@ -54,7 +56,8 @@ export async function GET() {
       pixTotal,
       cashTotal,
       cardTotal,
-      clientTotal
+      clientTotal,
+      transactions: outTransactions
     });
   } catch (error) {
     return NextResponse.json({ error: 'Erro ao buscar resumo' }, { status: 500 });

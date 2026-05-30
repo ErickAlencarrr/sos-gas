@@ -21,7 +21,8 @@ import {
   Smartphone,
   CreditCard,
   Check,
-  Box
+  Box,
+  Trash2
 } from "lucide-react";
 
 type Product = {
@@ -83,6 +84,24 @@ export default function Home() {
       console.error(e);
     } finally {
       setIsLoadingTodaySales(false);
+    }
+  };
+
+  const handleDeleteTransaction = async (id: string) => {
+    if (!confirm("Tem certeza que deseja estornar esta venda? O estoque será restaurado e o valor removido do caixa.")) return;
+    
+    try {
+      const res = await fetch(`/api/transactions/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        toast.success("Venda estornada com sucesso!");
+        fetchTodaySales(); // Atualiza a lista de vendas de hoje
+        fetchProducts();   // Atualiza os painéis (estoque e resumo)
+      } else {
+        const data = await res.json();
+        toast.error(data.error || "Erro ao estornar venda.");
+      }
+    } catch (e) {
+      toast.error("Erro de conexão.");
     }
   };
 
@@ -692,7 +711,7 @@ export default function Home() {
               ) : (
                 <div className="space-y-3">
                   {todaySales.map((tx: any) => (
-                    <div key={tx.id} className="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 flex justify-between items-center">
+                    <div key={tx.id} className="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 flex justify-between items-center gap-2">
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <p className="font-bold text-slate-800 dark:text-white">{tx.product?.name || "Produto"}</p>
@@ -719,10 +738,21 @@ export default function Home() {
                           )}
                         </div>
                       </div>
-                      <div className="text-right shrink-0 ml-4">
+                      <div className="text-right shrink-0">
                         <p className="font-black text-slate-800 dark:text-white">Qtd: {tx.quantity}</p>
                         <p className="text-sm font-bold text-brand-600 dark:text-brand-400">R$ {tx.price ? tx.price.toFixed(2).replace('.', ',') : "0,00"}</p>
                       </div>
+                      {isAdmin && (
+                        <div className="shrink-0 ml-2">
+                          <button 
+                            onClick={() => handleDeleteTransaction(tx.id)}
+                            title="Estornar Venda"
+                            className="p-2.5 bg-red-50 text-red-500 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40 rounded-xl transition-colors active:scale-95"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
