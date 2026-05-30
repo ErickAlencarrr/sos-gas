@@ -22,7 +22,8 @@ import {
   CreditCard,
   Check,
   Box,
-  Trash2
+  Trash2,
+  Edit
 } from "lucide-react";
 
 type Product = {
@@ -775,7 +776,14 @@ export default function Home() {
                         <p className="text-sm font-bold text-brand-600 dark:text-brand-400">R$ {tx.price ? tx.price.toFixed(2).replace('.', ',') : "0,00"}</p>
                       </div>
                       {isAdmin && (
-                        <div className="shrink-0 ml-2">
+                        <div className="flex items-center gap-2 shrink-0 ml-2">
+                          <button 
+                            onClick={() => handleEditClick(tx)}
+                            title="Editar Venda"
+                            className="p-2.5 bg-blue-50 text-blue-500 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40 rounded-xl transition-colors active:scale-95"
+                          >
+                            <Edit className="w-5 h-5" />
+                          </button>
                           <button 
                             onClick={() => handleDeleteTransaction(tx.id)}
                             title="Estornar Venda"
