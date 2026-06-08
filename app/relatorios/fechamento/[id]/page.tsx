@@ -174,7 +174,7 @@ export default function FechamentoRelatorioPage() {
                             )}
                             {tx.customerId && tx.paymentMethod !== 'SPLIT' && (
                               <div className="text-[10px] text-brand-500 font-bold mt-1 truncate max-w-[120px]">
-                                {tx.customer?.name || "Cliente Registrado"}
+                                {tx.customer?.name || "Conta Cliente"}
                               </div>
                             )}
                           </td>
