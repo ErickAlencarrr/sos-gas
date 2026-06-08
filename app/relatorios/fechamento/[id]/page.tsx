@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Printer, ArrowLeft, Wallet, CheckCircle, Smartphone, Banknote, CreditCard, PackageOpen } from "lucide-react";
+import { Printer, ArrowLeft, Wallet, CheckCircle, Smartphone, Banknote, CreditCard, PackageOpen, Users } from "lucide-react";
 
 export default function FechamentoRelatorioPage() {
   const params = useParams();
@@ -72,7 +72,7 @@ export default function FechamentoRelatorioPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-2 text-slate-500 mb-2">
                 <Banknote className="w-4 h-4" /> <span className="text-xs font-bold uppercase">Dinheiro</span>
@@ -90,6 +90,12 @@ export default function FechamentoRelatorioPage() {
                 <CreditCard className="w-4 h-4" /> <span className="text-xs font-bold uppercase">Cartão</span>
               </div>
               <p className="text-xl font-black text-slate-800 dark:text-white">R$ {closing.cardTotal.toFixed(2).replace('.', ',')}</p>
+            </div>
+            <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2 text-slate-500 mb-2">
+                <Users className="w-4 h-4" /> <span className="text-xs font-bold uppercase">Conta Cliente</span>
+              </div>
+              <p className="text-xl font-black text-slate-800 dark:text-white">R$ {closing.clientTotal ? closing.clientTotal.toFixed(2).replace('.', ',') : '0,00'}</p>
             </div>
           </div>
 
