@@ -36,6 +36,21 @@ export default function FechamentoRelatorioPage() {
     return <div className="p-8 text-center text-red-500 font-medium">Relatório não encontrado.</div>;
   }
 
+  const itemsSummary = useMemo(() => {
+    if (!closing?.transactions) return [];
+    
+    const summaryMap: Record<string, { name: string, quantity: number, unit?: string }> = {};
+    
+    closing.transactions.forEach((tx: any) => {
+      if (!summaryMap[tx.productId]) {
+        summaryMap[tx.productId] = { name: tx.product?.name || 'Produto', quantity: 0, unit: tx.product?.unit || 'un' };
+      }
+      summaryMap[tx.productId].quantity += tx.quantity;
+    });
+    
+    return Object.values(summaryMap).sort((a, b) => b.quantity - a.quantity);
+  }, [closing]);
+
   return (
     <main className="p-5 md:p-8 font-sans pb-28 md:pb-8 max-w-2xl mx-auto">
       <div className="flex justify-between items-center mb-6 print:hidden">
@@ -101,6 +116,18 @@ export default function FechamentoRelatorioPage() {
 
           <div>
             <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Métricas de Estoque</h3>
+            
+            {itemsSummary.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
+                {itemsSummary.map((item, idx) => (
+                  <div key={idx} className="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex flex-col justify-center items-center text-center">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">{item.name}</span>
+                    <span className="text-2xl font-black text-brand-600 dark:text-brand-400">{item.quantity} <span className="text-sm font-bold">{item.unit === 'UNIDADE' ? 'un' : item.unit === 'PACOTE' ? 'pct' : item.unit === 'METRO' ? 'm' : item.unit === 'LITRO' ? 'L' : item.unit === 'KG' ? 'kg' : ''}</span></span>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div className="flex items-center justify-between bg-white dark:bg-slate-950 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 mb-6">
               <div className="flex items-center gap-3">
                 <div className="p-3 bg-slate-100 dark:bg-slate-900 text-slate-500 rounded-xl">
