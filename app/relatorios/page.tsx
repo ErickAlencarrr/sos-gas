@@ -175,7 +175,7 @@ export default function RelatoriosPage() {
                       </button>
                     ) : (
                       <div className="text-xs text-slate-400 font-bold px-4 py-2 border border-slate-100 dark:border-slate-800 rounded-xl inline-block bg-slate-50 dark:bg-slate-900">
-                        PIX: R$ {item.pixTotal.toFixed(2).replace('.',',')} | Dinheiro: R$ {item.cashTotal.toFixed(2).replace('.',',')}
+                        PIX: R$ {item.pixTotal.toFixed(2).replace('.',',')} | DIN: R$ {item.cashTotal.toFixed(2).replace('.',',')} | CAR: R$ {item.cardTotal.toFixed(2).replace('.',',')} | CLI: R$ {(item.clientTotal || 0).toFixed(2).replace('.',',')}
                       </div>
                     )}
                   </td>
