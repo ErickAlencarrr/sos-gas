@@ -154,7 +154,7 @@ export default function FechamentoRelatorioPage() {
                     <tbody className="text-sm">
                       {closing.transactions.map((tx: any) => (
                         <tr key={tx.id} className="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                          <td className="p-4 font-bold text-slate-700 dark:text-slate-200">{tx.product.name}</td>
+                          <td className="p-4 font-bold text-slate-700 dark:text-slate-200">{tx.product?.name || "Produto Excluído"}</td>
                           <td className="p-4 font-black text-center">{tx.quantity}</td>
                           <td className="p-4">
                             <span className="text-[10px] font-bold uppercase px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500">
