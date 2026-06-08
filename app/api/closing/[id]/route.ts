@@ -14,7 +14,8 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
       include: {
         transactions: {
           include: {
-            product: true
+            product: true,
+            customer: true
           },
           orderBy: { createdAt: 'desc' }
         }

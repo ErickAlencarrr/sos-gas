@@ -28,6 +28,21 @@ export default function FechamentoRelatorioPage() {
     fetchClosing();
   }, [id]);
 
+  const itemsSummary = useMemo(() => {
+    if (!closing?.transactions) return [];
+
+    const summaryMap: Record<string, { name: string, quantity: number, unit?: string }> = {};
+
+    closing.transactions.forEach((tx: any) => {
+      if (!summaryMap[tx.productId]) {
+        summaryMap[tx.productId] = { name: tx.product?.name || 'Produto', quantity: 0, unit: tx.product?.unit || 'un' };
+      }
+      summaryMap[tx.productId].quantity += tx.quantity;
+    });
+
+    return Object.values(summaryMap).sort((a, b) => b.quantity - a.quantity);
+  }, [closing]);
+
   if (isLoading) {
     return <div className="p-8 text-center text-slate-500 font-medium">Carregando relatório...</div>;
   }
@@ -35,21 +50,6 @@ export default function FechamentoRelatorioPage() {
   if (!closing) {
     return <div className="p-8 text-center text-red-500 font-medium">Relatório não encontrado.</div>;
   }
-
-  const itemsSummary = useMemo(() => {
-    if (!closing?.transactions) return [];
-    
-    const summaryMap: Record<string, { name: string, quantity: number, unit?: string }> = {};
-    
-    closing.transactions.forEach((tx: any) => {
-      if (!summaryMap[tx.productId]) {
-        summaryMap[tx.productId] = { name: tx.product?.name || 'Produto', quantity: 0, unit: tx.product?.unit || 'un' };
-      }
-      summaryMap[tx.productId].quantity += tx.quantity;
-    });
-    
-    return Object.values(summaryMap).sort((a, b) => b.quantity - a.quantity);
-  }, [closing]);
 
   return (
     <main className="p-5 md:p-8 font-sans pb-28 md:pb-8 max-w-2xl mx-auto">
