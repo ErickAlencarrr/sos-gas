@@ -158,8 +158,25 @@ export default function FechamentoRelatorioPage() {
                           <td className="p-4 font-black text-center">{tx.quantity}</td>
                           <td className="p-4">
                             <span className="text-[10px] font-bold uppercase px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500">
-                              {tx.paymentMethod === 'CASH' ? 'Dinheiro' : tx.paymentMethod === 'PIX' ? 'PIX' : tx.paymentMethod === 'SOS' ? 'Vendas SoS' : 'Cartão'}
+                              {tx.paymentMethod === 'CASH' && 'Dinheiro'}
+                              {tx.paymentMethod === 'PIX' && 'PIX'}
+                              {tx.paymentMethod === 'CARD' && 'Cartão'}
+                              {tx.paymentMethod === 'CLIENT' && 'Conta Cliente'}
+                              {tx.paymentMethod === 'SPLIT' && 'Múltiplo'}
                             </span>
+                            {tx.paymentMethod === 'SPLIT' && (
+                              <div className="text-[10px] text-slate-400 font-bold mt-1">
+                                {tx.cashPrice > 0 && `DIN: R$${tx.cashPrice.toFixed(2).replace('.',',')} `}
+                                {tx.pixPrice > 0 && `PIX: R$${tx.pixPrice.toFixed(2).replace('.',',')} `}
+                                {tx.cardPrice > 0 && `CAR: R$${tx.cardPrice.toFixed(2).replace('.',',')} `}
+                                {tx.clientPrice > 0 && `CLI: R$${tx.clientPrice.toFixed(2).replace('.',',')}`}
+                              </div>
+                            )}
+                            {tx.customerId && tx.paymentMethod !== 'SPLIT' && (
+                              <div className="text-[10px] text-brand-500 font-bold mt-1 truncate max-w-[120px]">
+                                {tx.customer?.name || "Cliente Registrado"}
+                              </div>
+                            )}
                           </td>
                           <td className="p-4 font-bold text-right text-brand-600 dark:text-brand-400">
                             R$ {tx.price ? tx.price.toFixed(2).replace('.', ',') : '0,00'}
