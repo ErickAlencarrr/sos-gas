@@ -2,7 +2,9 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, Wallet, CalendarDays, ArrowRight, BarChart3, CalendarRange } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { toast } from "sonner";
+import { FileText, Wallet, CalendarDays, ArrowRight, BarChart3, CalendarRange, RefreshCcw } from "lucide-react";
 
 type DailyClosing = {
   id: string;
@@ -19,25 +21,41 @@ type DailyClosing = {
 export default function RelatoriosPage() {
   const [closings, setClosings] = useState<DailyClosing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFixing, setIsFixing] = useState(false);
   const [viewMode, setViewMode] = useState<"DAILY" | "WEEKLY" | "MONTHLY">("DAILY");
   const router = useRouter();
+  const { data: session } = useSession();
 
-  useEffect(() => {
-    const fetchClosings = async () => {
-      try {
-        const res = await fetch("/api/closing");
-        if(res.ok) {
-          const data = await res.json();
-          setClosings(data);
-        }
-      } catch (error) {
-        console.error("Erro ao buscar fechamentos", error);
-      } finally {
-        setIsLoading(false);
+  const fetchClosings = async () => {
+    try {
+      const res = await fetch("/api/closing");
+      if (res.ok) setClosings(await res.json());
+    } catch (error) {
+      console.error("Erro ao buscar fechamentos", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleFixOrphaned = async () => {
+    setIsFixing(true);
+    try {
+      const res = await fetch('/api/admin/fix-orphaned', { method: 'POST' });
+      const data = await res.json();
+      if (data.fechados?.length > 0) {
+        toast.success(data.mensagem);
+        await fetchClosings();
+      } else {
+        toast.info(data.mensagem || 'Nenhum fechamento pendente encontrado.');
       }
-    };
-    fetchClosings();
-  }, []);
+    } catch {
+      toast.error('Erro ao recuperar fechamentos pendentes.');
+    } finally {
+      setIsFixing(false);
+    }
+  };
+
+  useEffect(() => { fetchClosings(); }, []);
 
   const groupedData = useMemo(() => {
     if (viewMode === "DAILY") return closings;
@@ -45,7 +63,7 @@ export default function RelatoriosPage() {
     const groups: Record<string, any> = {};
 
     closings.forEach(closing => {
-      const date = new Date(closing.createdAt);
+      const date = new Date(closing.date);
       let key = "";
 
       if (viewMode === "MONTHLY") {
@@ -89,11 +107,23 @@ export default function RelatoriosPage() {
 
   return (
     <main className="p-5 md:p-8 font-sans pb-28 md:pb-8 max-w-5xl mx-auto">
-      <header className="mb-8">
-        <h2 className="text-3xl font-black text-slate-800 dark:text-white flex items-center gap-3">
-          <FileText className="w-8 h-8 text-brand-500" /> Relatórios de Caixa
-        </h2>
-        <p className="text-slate-500 mt-2 font-medium">Histórico completo e agrupado do faturamento da empresa.</p>
+      <header className="mb-8 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-black text-slate-800 dark:text-white flex items-center gap-3">
+            <FileText className="w-8 h-8 text-brand-500" /> Relatórios de Caixa
+          </h2>
+          <p className="text-slate-500 mt-2 font-medium">Histórico completo e agrupado do faturamento da empresa.</p>
+        </div>
+        {session?.user?.role === 'ADMIN' && (
+          <button
+            onClick={handleFixOrphaned}
+            disabled={isFixing}
+            className="flex items-center gap-2 px-4 py-2.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 text-amber-700 dark:text-amber-400 rounded-2xl text-sm font-bold hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors disabled:opacity-60 whitespace-nowrap self-start"
+          >
+            <RefreshCcw className={`w-4 h-4 ${isFixing ? 'animate-spin' : ''}`} />
+            {isFixing ? 'Recuperando...' : 'Recuperar dias pendentes'}
+          </button>
+        )}
       </header>
 
       {/* Tabs de Filtro */}
@@ -144,9 +174,9 @@ export default function RelatoriosPage() {
                     <div>
                       {viewMode === "DAILY" ? (
                         <>
-                          {new Date(item.createdAt).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'long', year: 'numeric' })}
+                          {new Date(item.date).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'long', year: 'numeric' })}
                           <div className="text-xs text-slate-400 font-medium">
-                            às {new Date(item.createdAt).toLocaleTimeString('pt-BR')}
+                            Fechado às {new Date(item.createdAt).toLocaleTimeString('pt-BR')}
                           </div>
                         </>
                       ) : (
@@ -208,10 +238,10 @@ export default function RelatoriosPage() {
                     {viewMode === "DAILY" ? (
                       <>
                         <h4 className="font-bold text-slate-800 dark:text-white capitalize">
-                          {new Date(item.createdAt).toLocaleDateString('pt-BR', { weekday: 'long' })}
+                          {new Date(item.date).toLocaleDateString('pt-BR', { weekday: 'long' })}
                         </h4>
                         <span className="text-xs font-bold text-slate-400">
-                          {new Date(item.createdAt).toLocaleDateString('pt-BR')} às {new Date(item.createdAt).toLocaleTimeString('pt-BR')}
+                          {new Date(item.date).toLocaleDateString('pt-BR')} · Fechado às {new Date(item.createdAt).toLocaleTimeString('pt-BR')}
                         </span>
                       </>
                     ) : (

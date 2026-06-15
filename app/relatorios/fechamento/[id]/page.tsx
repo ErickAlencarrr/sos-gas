@@ -70,9 +70,9 @@ export default function FechamentoRelatorioPage() {
           </div>
           <h1 className="text-3xl font-black tracking-tight mb-1">Fechamento de Caixa</h1>
           <p className="text-brand-100 font-medium opacity-90">
-            {new Date(closing.createdAt).toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            {new Date(closing.date).toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
-          <p className="text-sm text-brand-200 mt-1">Hora do fechamento: {new Date(closing.createdAt).toLocaleTimeString('pt-BR')}</p>
+          <p className="text-sm text-brand-200 mt-1">Fechado às {new Date(closing.createdAt).toLocaleTimeString('pt-BR')}</p>
         </div>
 
         {/* Resumo Faturamento */}
