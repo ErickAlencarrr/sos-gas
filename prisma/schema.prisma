@@ -86,7 +86,9 @@ model Transaction {
   cardPrice     Float?          @default(0)
   clientPrice   Float?          @default(0)
 
-  returnedEmpty Boolean?        @default(true) // Cliente devolveu o vasilhame?
+  returnedEmpty   Boolean?       @default(true)  // Cliente devolveu o vasilhame?
+  isPendingPickup Boolean        @default(false) // Pago mas aguardando retirada
+  pickedUpAt      DateTime?                      // Quando foi retirado
 
   // Campos de Entrada (Notas e Boletos)
   invoiceNumber String?

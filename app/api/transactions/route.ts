@@ -7,7 +7,7 @@ export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     const body = await req.json();
-    const { productId, type, quantity, invoiceNumber, hasBoleto, isBoletoPaid, boletoAmount, boletoDueDate, price, paymentMethod, returnedEmpty, emptyQuantity } = body;
+    const { productId, type, quantity, invoiceNumber, hasBoleto, isBoletoPaid, boletoAmount, boletoDueDate, price, paymentMethod, returnedEmpty, emptyQuantity, isPendingPickup } = body;
 
     if (!productId || !type || !quantity) {
       return NextResponse.json({ error: 'Dados incompletos' }, { status: 400 });
@@ -37,6 +37,7 @@ export async function POST(req: Request) {
           clientPrice: paymentMethod === 'SPLIT' && body.splitValues ? parseFloat(body.splitValues.client) : 0,
 
           returnedEmpty: type === 'OUT' ? (returnedEmpty !== undefined ? returnedEmpty : true) : null,
+          isPendingPickup: type === 'OUT' ? (isPendingPickup === true) : false,
           emptyQuantity: type === 'IN' ? (emptyQuantity !== undefined ? parseInt(emptyQuantity) : parseInt(quantity)) : null,
           customerId: (paymentMethod === 'CLIENT' || (paymentMethod === 'SPLIT' && body.splitValues?.client > 0)) && body.customerId ? body.customerId : null
         },

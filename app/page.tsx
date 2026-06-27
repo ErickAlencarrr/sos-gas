@@ -5,12 +5,12 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { maskCurrency, unmaskCurrency } from "@/lib/mask";
-import { 
-  PlusCircle, 
-  MinusCircle, 
-  Wallet, 
-  X, 
-  Flame, 
+import {
+  PlusCircle,
+  MinusCircle,
+  Wallet,
+  X,
+  Flame,
   Droplets,
   TrendingUp,
   PackageOpen,
@@ -23,7 +23,9 @@ import {
   Check,
   Box,
   Trash2,
-  Edit
+  Edit,
+  Clock,
+  CheckCheck
 } from "lucide-react";
 
 type Product = {
@@ -67,6 +69,10 @@ export default function Home() {
   const [newCustomerName, setNewCustomerName] = useState("");
   const [isCreatingCustomer, setIsCreatingCustomer] = useState(false);
   
+  // Aguardando Retirada
+  const [isPendingPickup, setIsPendingPickup] = useState(false);
+  const [pendingPickups, setPendingPickups] = useState<any[]>([]);
+
   // Resumo de Hoje e Fechamento
   const [todaySummary, setTodaySummary] = useState<any>(null);
   const [isClosingModalOpen, setIsClosingModalOpen] = useState(false);
@@ -145,6 +151,27 @@ export default function Home() {
     } catch(e) {}
   };
 
+  const fetchPendingPickups = async () => {
+    try {
+      const res = await fetch("/api/transactions/pending-pickups");
+      if (res.ok) setPendingPickups(await res.json());
+    } catch(e) {}
+  };
+
+  const handleConfirmPickup = async (id: string) => {
+    try {
+      const res = await fetch(`/api/transactions/${id}/pickup`, { method: 'PATCH' });
+      if (res.ok) {
+        toast.success("Retirada confirmada!");
+        fetchPendingPickups();
+      } else {
+        toast.error("Erro ao confirmar retirada.");
+      }
+    } catch {
+      toast.error("Erro de conexão.");
+    }
+  };
+
   const fetchCustomers = async () => {
     try {
       const res = await fetch("/api/customers");
@@ -171,6 +198,7 @@ export default function Home() {
 
   useEffect(() => {
     fetchProducts();
+    fetchPendingPickups();
   }, []);
 
   const openModal = () => {
@@ -180,6 +208,7 @@ export default function Home() {
     setIsSplitPayment(false);
     setSplitValues({ cash: "", pix: "", card: "", client: "" });
     setReturnedEmpty(true);
+    setIsPendingPickup(false);
     setSelectedCustomer("");
     setNewCustomerName("");
     setIsCreatingCustomer(false);
@@ -247,6 +276,7 @@ export default function Home() {
         paymentMethod: isSplitPayment ? 'SPLIT' : paymentMethod,
         splitValues: isSplitPayment ? { cash: unmaskedCash, pix: unmaskedPix, card: unmaskedCard, client: unmaskedClient } : undefined,
         returnedEmpty: returnedEmpty,
+        isPendingPickup: isPendingPickup,
         customerId: (isSplitPayment && parseFloat(unmaskedClient) > 0) || (!isSplitPayment && paymentMethod === 'CLIENT') ? selectedCustomer : null
       };
 
@@ -256,9 +286,10 @@ export default function Home() {
         body: JSON.stringify(payload)
       });
       if(res.ok) {
-        toast.success("Venda registrada com sucesso!");
+        toast.success(isPendingPickup ? "Venda registrada! Aguardando retirada." : "Venda registrada com sucesso!");
         setIsModalOpen(false);
         fetchProducts();
+        fetchPendingPickups();
       } else {
         toast.error("Erro ao salvar transação");
       }
@@ -405,8 +436,42 @@ export default function Home() {
         </div>
 
         {/* Coluna Direita: Ações */}
-        <div className="lg:col-span-4">
-          <div className="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 h-full">
+        <div className="lg:col-span-4 flex flex-col gap-6">
+
+          {/* Widget: Retiradas Pendentes */}
+          {pendingPickups.length > 0 && (
+            <div className="bg-amber-50 dark:bg-amber-900/20 p-6 rounded-3xl border-2 border-amber-200 dark:border-amber-800/40">
+              <h2 className="text-sm font-bold text-amber-700 dark:text-amber-400 mb-4 uppercase tracking-widest flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                Aguardando Retirada
+                <span className="ml-auto bg-amber-500 text-white text-xs font-black px-2 py-0.5 rounded-full">{pendingPickups.length}</span>
+              </h2>
+              <div className="space-y-3">
+                {pendingPickups.map((tx: any) => (
+                  <div key={tx.id} className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-amber-100 dark:border-amber-800/20 flex items-center justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-slate-800 dark:text-white truncate">{tx.product?.name}</p>
+                      <p className="text-xs text-slate-500 font-medium">
+                        {tx.quantity} un · R$ {tx.price?.toFixed(2).replace('.', ',')}
+                      </p>
+                      <p className="text-[10px] text-amber-600 dark:text-amber-400 font-bold mt-0.5">
+                        {tx.paymentMethod === 'PIX' ? 'PIX' : tx.paymentMethod === 'CASH' ? 'Dinheiro' : tx.paymentMethod === 'CARD' ? 'Cartão' : tx.paymentMethod === 'SPLIT' ? 'Múltiplo' : tx.paymentMethod} · {new Date(tx.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleConfirmPickup(tx.id)}
+                      title="Confirmar Retirada"
+                      className="shrink-0 p-3 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl transition-all active:scale-95 shadow-sm shadow-amber-500/30"
+                    >
+                      <CheckCheck className="w-5 h-5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800">
             <h2 className="text-sm font-bold text-slate-400 dark:text-slate-500 mb-6 uppercase tracking-widest flex items-center gap-2">
                Ações Rápidas
             </h2>
@@ -636,6 +701,20 @@ export default function Home() {
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" className="sr-only peer" checked={returnedEmpty} onChange={(e) => setReturnedEmpty(e.target.checked)} />
                       <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-brand-500"></div>
+                    </label>
+                  </div>
+
+                  <div className={`flex items-center justify-between p-3 rounded-xl border mt-2 transition-colors ${isPendingPickup ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/40' : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800'}`}>
+                    <div className="flex items-center gap-2">
+                      <Clock className={`w-5 h-5 ${isPendingPickup ? 'text-amber-500' : 'text-slate-400'}`} />
+                      <div>
+                        <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Pagou mas não retirou</span>
+                        <p className="text-[10px] text-slate-400 font-medium">Aparecerá na lista de retiradas pendentes</p>
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" className="sr-only peer" checked={isPendingPickup} onChange={(e) => setIsPendingPickup(e.target.checked)} />
+                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-amber-500"></div>
                     </label>
                   </div>
                 </div>
