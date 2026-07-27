@@ -44,26 +44,34 @@ export async function POST(req: Request) {
         include: { product: true }
       });
 
-      let emptyStockChange = 0;
-      if (type === 'IN') {
-         // O caminhão leva os vasilhames vazios (então subtrai o que foi informado, ou o padrão que é a mesma qtd recebida)
-         emptyStockChange = -(emptyQuantity !== undefined ? parseInt(emptyQuantity) : parseInt(quantity));
-      } else if (type === 'OUT' && returnedEmpty !== false) {
-         emptyStockChange = parseInt(quantity);
-      }
+      // Se é venda paga mas aguardando retirada, o produto ainda está na loja:
+      // não baixa estoque agora, só quando a retirada for confirmada.
+      const skipStockUpdate = type === 'OUT' && isPendingPickup === true;
 
-      // Atualiza o estoque de Cheios e Vazios
-      const product = await tx.product.update({
-        where: { id: productId },
-        data: {
-          currentStock: {
-            [type === 'IN' ? 'increment' : 'decrement']: parseInt(quantity),
+      let product = await tx.product.findUniqueOrThrow({ where: { id: productId } });
+
+      if (!skipStockUpdate) {
+        let emptyStockChange = 0;
+        if (type === 'IN') {
+           // O caminhão leva os vasilhames vazios (então subtrai o que foi informado, ou o padrão que é a mesma qtd recebida)
+           emptyStockChange = -(emptyQuantity !== undefined ? parseInt(emptyQuantity) : parseInt(quantity));
+        } else if (type === 'OUT' && returnedEmpty !== false) {
+           emptyStockChange = parseInt(quantity);
+        }
+
+        // Atualiza o estoque de Cheios e Vazios
+        product = await tx.product.update({
+          where: { id: productId },
+          data: {
+            currentStock: {
+              [type === 'IN' ? 'increment' : 'decrement']: parseInt(quantity),
+            },
+            emptyStock: {
+              increment: emptyStockChange
+            }
           },
-          emptyStock: {
-            increment: emptyStockChange
-          }
-        },
-      });
+        });
+      }
 
       // Se for saída FIADO para Cliente ou SPLIT com valor cliente, atualiza o saldo do cliente
       if (type === 'OUT' && body.customerId) {
