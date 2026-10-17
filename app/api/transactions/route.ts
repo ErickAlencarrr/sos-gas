@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSessionOrBearer } from '@/lib/getSessionOrBearer';
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getSessionOrBearer(req);
+    if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+
     const body = await req.json();
     const { productId, type, quantity, invoiceNumber, hasBoleto, isBoletoPaid, boletoAmount, boletoDueDate, price, paymentMethod, returnedEmpty, emptyQuantity, isPendingPickup } = body;
 

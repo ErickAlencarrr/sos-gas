@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getSessionOrBearer } from '@/lib/getSessionOrBearer';
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getSessionOrBearer(req);
     if (session?.user?.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Apenas a Diretoria pode ver relatórios.' }, { status: 403 });
     }
@@ -20,9 +19,9 @@ export async function GET() {
   }
 }
 
-export async function POST() {
+export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getSessionOrBearer(req);
     if (session?.user?.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Apenas a Diretoria pode fechar o caixa.' }, { status: 403 });
     }

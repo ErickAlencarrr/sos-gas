@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSessionOrBearer } from '@/lib/getSessionOrBearer';
 
 export async function PUT(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params;
-    const session = await getServerSession(authOptions);
+    const session = await getSessionOrBearer(req);
     if (session?.user?.role !== 'ADMIN') return NextResponse.json({ error: 'Não autorizado' }, { status: 403 });
 
     const { name, type, currentStock, emptyStock, unit } = await req.json();
@@ -31,7 +30,7 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
 export async function DELETE(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params;
-    const session = await getServerSession(authOptions);
+    const session = await getSessionOrBearer(req);
     if (session?.user?.role !== 'ADMIN') return NextResponse.json({ error: 'Não autorizado' }, { status: 403 });
 
     await prisma.product.delete({ where: { id } });

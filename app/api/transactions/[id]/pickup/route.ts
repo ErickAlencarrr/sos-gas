@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getSessionOrBearer } from '@/lib/getSessionOrBearer';
 
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getSessionOrBearer(req);
     if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
 
     const { id } = await context.params;

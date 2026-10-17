@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getSessionOrBearer } from '@/lib/getSessionOrBearer';
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const session = await getSessionOrBearer(req);
+    if (!session) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+
     const transactions = await prisma.transaction.findMany({
       orderBy: { createdAt: 'desc' },
       include: { product: true },
