@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "SOS Gás",
+    "name": "SOS Gas",
     "slug": "sos-gas-mobile",
     "scheme": "sosgas",
     "version": "1.0.0",
@@ -9,7 +9,10 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.sosgas.mobile"
+      "bundleIdentifier": "com.sosgas.mobile",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
