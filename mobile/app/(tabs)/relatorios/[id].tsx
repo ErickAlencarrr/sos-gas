@@ -1,0 +1,102 @@
+import { useMemo } from "react";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { useLocalSearchParams } from "expo-router";
+import { useClosingDetail } from "../../../lib/queries";
+
+function formatBRL(value: number) {
+  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+export default function FechamentoDetailScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const closing = useClosingDetail(id ?? null);
+
+  const productSummary = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const tx of closing.data?.transactions ?? []) {
+      const name = tx.product?.name ?? "—";
+      map.set(name, (map.get(name) ?? 0) + tx.quantity);
+    }
+    return Array.from(map.entries());
+  }, [closing.data]);
+
+  if (closing.isLoading) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.emptyText}>Carregando...</Text>
+      </View>
+    );
+  }
+
+  if (!closing.data) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.emptyText}>Fechamento não encontrado.</Text>
+      </View>
+    );
+  }
+
+  const d = closing.data;
+
+  return (
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
+      <Text style={styles.title}>{new Date(d.date).toLocaleDateString("pt-BR")}</Text>
+      <Text style={styles.subtitle}>{d.totalSales} vendas · {formatBRL(d.totalRevenue)}</Text>
+
+      <Text style={styles.sectionTitle}>Totais por forma de pagamento</Text>
+      <View style={styles.summaryBox}>
+        <Text style={styles.summaryItem}>PIX: {formatBRL(d.pixTotal)}</Text>
+        <Text style={styles.summaryItem}>Dinheiro: {formatBRL(d.cashTotal)}</Text>
+        <Text style={styles.summaryItem}>Cartão: {formatBRL(d.cardTotal)}</Text>
+        <Text style={styles.summaryItem}>Fiado: {formatBRL(d.clientTotal)}</Text>
+      </View>
+
+      <Text style={styles.sectionTitle}>Produtos vendidos</Text>
+      {productSummary.map(([name, qty]) => (
+        <View key={name} style={styles.row}>
+          <Text style={styles.rowTitle}>{name}</Text>
+          <Text style={styles.rowValue}>{qty}x</Text>
+        </View>
+      ))}
+
+      <Text style={styles.sectionTitle}>Transações</Text>
+      {(d.transactions ?? []).map((tx) => (
+        <View key={tx.id} style={styles.row}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.rowTitle}>
+              {tx.quantity}x {tx.product?.name}
+            </Text>
+            <Text style={styles.rowSub}>
+              {tx.paymentMethod} {tx.customer ? `· ${tx.customer.name}` : ""}
+            </Text>
+          </View>
+          <Text style={styles.rowValue}>{formatBRL(tx.price ?? 0)}</Text>
+        </View>
+      ))}
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 20 },
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  emptyText: { color: "#888" },
+  title: { fontSize: 22, fontWeight: "700" },
+  subtitle: { color: "#888", marginBottom: 16 },
+  sectionTitle: { fontSize: 14, fontWeight: "700", marginTop: 20, marginBottom: 10 },
+  summaryBox: { borderWidth: 1, borderColor: "#eee", borderRadius: 12, padding: 16, backgroundColor: "#fafafa", gap: 4 },
+  summaryItem: { fontSize: 14 },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderWidth: 1,
+    borderColor: "#eee",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 8,
+  },
+  rowTitle: { fontWeight: "600" },
+  rowSub: { color: "#888", fontSize: 12, marginTop: 2 },
+  rowValue: { fontWeight: "700" },
+});
