@@ -13,6 +13,7 @@ import {
 import { Product, Customer, PaymentMethod } from "../types";
 import { useCreateSale, useCustomers } from "../lib/queries";
 import { ApiError } from "../lib/api";
+import { colors } from "../lib/theme";
 
 const PAYMENT_METHODS: { key: PaymentMethod; label: string }[] = [
   { key: "PIX", label: "PIX" },
@@ -181,28 +182,31 @@ export default function SellModal({
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, paddingTop: 60 },
-  title: { fontSize: 22, fontWeight: "700", marginBottom: 20 },
-  label: { fontSize: 14, color: "#555", marginTop: 16, marginBottom: 6, flexShrink: 1 },
+  container: { flex: 1, padding: 20, paddingTop: 60, backgroundColor: colors.white },
+  title: { fontSize: 22, fontWeight: "700", marginBottom: 20, color: colors.slate900 },
+  label: { fontSize: 14, color: colors.slate600, marginTop: 16, marginBottom: 6, flexShrink: 1 },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 10,
+    borderColor: colors.slate200,
+    backgroundColor: colors.slate50,
+    borderRadius: 16,
     paddingHorizontal: 14,
     paddingVertical: 10,
     fontSize: 16,
+    color: colors.slate900,
   },
   chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   chip: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: colors.slate200,
+    backgroundColor: colors.slate50,
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 8,
   },
-  chipActive: { backgroundColor: "#111", borderColor: "#111" },
-  chipText: { color: "#333" },
-  chipTextActive: { color: "#fff" },
+  chipActive: { backgroundColor: colors.brand600, borderColor: colors.brand600 },
+  chipText: { color: colors.slate600 },
+  chipTextActive: { color: colors.white },
   switchRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -211,13 +215,13 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   submitButton: {
-    backgroundColor: "#111",
+    backgroundColor: colors.brand600,
     paddingVertical: 14,
-    borderRadius: 10,
+    borderRadius: 16,
     alignItems: "center",
     marginTop: 28,
   },
-  submitText: { color: "#fff", fontWeight: "600", fontSize: 16 },
+  submitText: { color: colors.white, fontWeight: "700", fontSize: 16 },
   cancelButton: { paddingVertical: 14, alignItems: "center" },
-  cancelText: { color: "#888" },
+  cancelText: { color: colors.slate400 },
 });

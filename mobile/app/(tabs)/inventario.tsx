@@ -15,6 +15,7 @@ import { useAuth } from "../../lib/auth";
 import { useProducts, useReceiveStock } from "../../lib/queries";
 import { Product } from "../../types";
 import { ApiError } from "../../lib/api";
+import { colors } from "../../lib/theme";
 
 export default function InventarioScreen() {
   const { user } = useAuth();
@@ -168,24 +169,24 @@ function ReceiveModal({ product, onClose }: { product: Product | null; onClose: 
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  container: { flex: 1, padding: 20 },
-  title: { fontSize: 22, fontWeight: "700", marginBottom: 20 },
-  card: { borderWidth: 1, borderColor: "#eee", borderRadius: 12, padding: 16, marginBottom: 12, backgroundColor: "#fafafa" },
-  cardName: { fontSize: 16, fontWeight: "700", marginBottom: 10 },
+  flex: { flex: 1, backgroundColor: colors.screenBg },
+  container: { flex: 1, padding: 20, backgroundColor: colors.screenBg },
+  title: { fontSize: 22, fontWeight: "700", marginBottom: 20, color: colors.slate900 },
+  card: { borderWidth: 1, borderColor: colors.slate200, borderRadius: 16, padding: 16, marginBottom: 12, backgroundColor: colors.white },
+  cardName: { fontSize: 16, fontWeight: "700", marginBottom: 10, color: colors.slate900 },
   statsRow: { flexDirection: "row", gap: 24 },
   stat: {},
-  statLabel: { fontSize: 12, color: "#888" },
-  statValue: { fontSize: 20, fontWeight: "700" },
-  receiveButton: { backgroundColor: "#111", paddingVertical: 10, borderRadius: 8, alignItems: "center", marginTop: 14 },
-  receiveButtonText: { color: "#fff", fontWeight: "600" },
-  modalContainer: { flex: 1, padding: 20, paddingTop: 60 },
-  modalTitle: { fontSize: 20, fontWeight: "700", marginBottom: 20 },
-  label: { fontSize: 14, color: "#555", marginTop: 16, marginBottom: 6, flexShrink: 1 },
-  input: { borderWidth: 1, borderColor: "#ccc", borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 16 },
+  statLabel: { fontSize: 12, color: colors.slate500 },
+  statValue: { fontSize: 20, fontWeight: "700", color: colors.slate900 },
+  receiveButton: { backgroundColor: colors.brand600, paddingVertical: 10, borderRadius: 12, alignItems: "center", marginTop: 14 },
+  receiveButtonText: { color: colors.white, fontWeight: "700" },
+  modalContainer: { flex: 1, padding: 20, paddingTop: 60, backgroundColor: colors.white },
+  modalTitle: { fontSize: 20, fontWeight: "700", marginBottom: 20, color: colors.slate900 },
+  label: { fontSize: 14, color: colors.slate600, marginTop: 16, marginBottom: 6, flexShrink: 1 },
+  input: { borderWidth: 1, borderColor: colors.slate200, backgroundColor: colors.slate50, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 10, fontSize: 16, color: colors.slate900 },
   switchRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 16, gap: 12 },
-  submitButton: { backgroundColor: "#111", paddingVertical: 14, borderRadius: 10, alignItems: "center", marginTop: 28 },
-  submitText: { color: "#fff", fontWeight: "600", fontSize: 16 },
+  submitButton: { backgroundColor: colors.brand600, paddingVertical: 14, borderRadius: 16, alignItems: "center", marginTop: 28 },
+  submitText: { color: colors.white, fontWeight: "700", fontSize: 16 },
   cancelButton: { paddingVertical: 14, alignItems: "center" },
-  cancelText: { color: "#888" },
+  cancelText: { color: colors.slate400 },
 });

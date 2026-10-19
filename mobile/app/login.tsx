@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { useAuth } from "../lib/auth";
 import { ApiError } from "../lib/api";
+import { colors } from "../lib/theme";
 
 export default function LoginScreen() {
   const { login, shouldOfferBiometric, enableBiometric } = useAuth();
@@ -74,30 +75,32 @@ export default function LoginScreen() {
       {error && <Text style={styles.error}>{error}</Text>}
 
       <Pressable style={styles.button} onPress={handleLogin} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Entrar</Text>}
+        {loading ? <ActivityIndicator color={colors.white} /> : <Text style={styles.buttonText}>Entrar</Text>}
       </Pressable>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: 24, gap: 12 },
-  title: { fontSize: 28, fontWeight: "700", marginBottom: 24, textAlign: "center" },
+  container: { flex: 1, justifyContent: "center", padding: 24, gap: 12, backgroundColor: colors.screenBg },
+  title: { fontSize: 28, fontWeight: "700", marginBottom: 24, textAlign: "center", color: colors.brand700 },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 10,
+    borderColor: colors.slate200,
+    backgroundColor: colors.white,
+    borderRadius: 16,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 16,
+    color: colors.slate900,
   },
-  error: { color: "#c0392b" },
+  error: { color: colors.red600 },
   button: {
-    backgroundColor: "#111",
+    backgroundColor: colors.brand600,
     paddingVertical: 14,
-    borderRadius: 10,
+    borderRadius: 16,
     alignItems: "center",
     marginTop: 8,
   },
-  buttonText: { color: "#fff", fontWeight: "600", fontSize: 16 },
+  buttonText: { color: colors.white, fontWeight: "700", fontSize: 16 },
 });

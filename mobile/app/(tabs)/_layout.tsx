@@ -1,13 +1,22 @@
 import { Tabs } from "expo-router";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useAuth } from "../../lib/auth";
+import { colors } from "../../lib/theme";
 
 export default function TabsLayout() {
   const { user } = useAuth();
   const isAdmin = user?.role === "ADMIN";
 
   return (
-    <Tabs screenOptions={{ tabBarActiveTintColor: "#111" }}>
+    <Tabs
+      screenOptions={{
+        tabBarActiveTintColor: colors.brand600,
+        tabBarInactiveTintColor: colors.slate400,
+        tabBarStyle: { backgroundColor: colors.white, borderTopColor: colors.slate200 },
+        headerStyle: { backgroundColor: colors.white },
+        headerTintColor: colors.slate900,
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{

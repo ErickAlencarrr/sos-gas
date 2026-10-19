@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useClosingDetail } from "../../../lib/queries";
+import { colors } from "../../../lib/theme";
 
 function formatBRL(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -78,25 +79,26 @@ export default function FechamentoDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  emptyText: { color: "#888" },
-  title: { fontSize: 22, fontWeight: "700" },
-  subtitle: { color: "#888", marginBottom: 16 },
-  sectionTitle: { fontSize: 14, fontWeight: "700", marginTop: 20, marginBottom: 10 },
-  summaryBox: { borderWidth: 1, borderColor: "#eee", borderRadius: 12, padding: 16, backgroundColor: "#fafafa", gap: 4 },
-  summaryItem: { fontSize: 14 },
+  container: { flex: 1, padding: 20, backgroundColor: colors.screenBg },
+  center: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.screenBg },
+  emptyText: { color: colors.slate400 },
+  title: { fontSize: 22, fontWeight: "700", color: colors.slate900 },
+  subtitle: { color: colors.slate500, marginBottom: 16 },
+  sectionTitle: { fontSize: 13, fontWeight: "700", marginTop: 20, marginBottom: 10, color: colors.slate900, textTransform: "uppercase", letterSpacing: 0.5 },
+  summaryBox: { borderWidth: 1, borderColor: colors.slate200, borderRadius: 16, padding: 16, backgroundColor: colors.white, gap: 4 },
+  summaryItem: { fontSize: 14, color: colors.slate700 },
   row: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     borderWidth: 1,
-    borderColor: "#eee",
-    borderRadius: 12,
+    borderColor: colors.slate200,
+    backgroundColor: colors.white,
+    borderRadius: 16,
     padding: 12,
     marginBottom: 8,
   },
-  rowTitle: { fontWeight: "600" },
-  rowSub: { color: "#888", fontSize: 12, marginTop: 2 },
-  rowValue: { fontWeight: "700" },
+  rowTitle: { fontWeight: "600", color: colors.slate900 },
+  rowSub: { color: colors.slate500, fontSize: 12, marginTop: 2 },
+  rowValue: { fontWeight: "700", color: colors.slate900 },
 });

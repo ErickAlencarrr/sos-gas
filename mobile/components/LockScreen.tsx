@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useAuth } from "../lib/auth";
+import { colors } from "../lib/theme";
 
 export default function LockScreen() {
   const { unlockWithBiometrics, usePasswordInstead, user } = useAuth();
@@ -43,17 +44,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 24,
     gap: 12,
+    backgroundColor: colors.screenBg,
   },
-  title: { fontSize: 28, fontWeight: "700" },
-  subtitle: { fontSize: 16, color: "#555", marginBottom: 16 },
-  error: { color: "#c0392b", marginBottom: 8 },
+  title: { fontSize: 28, fontWeight: "700", color: colors.brand700 },
+  subtitle: { fontSize: 16, color: colors.slate600, marginBottom: 16 },
+  error: { color: colors.red600, marginBottom: 8 },
   button: {
-    backgroundColor: "#111",
+    backgroundColor: colors.brand600,
     paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: 10,
+    borderRadius: 16,
     marginTop: 8,
   },
-  buttonText: { color: "#fff", fontWeight: "600" },
-  link: { color: "#555", marginTop: 16, textDecorationLine: "underline" },
+  buttonText: { color: colors.white, fontWeight: "700" },
+  link: { color: colors.slate500, marginTop: 16, textDecorationLine: "underline" },
 });

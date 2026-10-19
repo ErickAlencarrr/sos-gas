@@ -4,6 +4,7 @@ import { useAuth } from "../../lib/auth";
 import { useBills, useCreateBill, useToggleBillPaid, useDeleteBill, BillPayload } from "../../lib/queries";
 import { Bill } from "../../types";
 import { ApiError } from "../../lib/api";
+import { colors } from "../../lib/theme";
 
 function formatBRL(value: number | null | undefined) {
   return (value ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -67,7 +68,7 @@ export default function ContasScreen() {
               style={[styles.smallButton, b.isPaid && styles.smallButtonPaid]}
               onPress={() => togglePaid.mutate({ id: b.id, isPaid: !b.isPaid })}
             >
-              <Text style={styles.smallButtonText}>{b.isPaid ? "Paga" : "Marcar paga"}</Text>
+              <Text style={[styles.smallButtonText, b.isPaid && styles.smallButtonTextPaid]}>{b.isPaid ? "Paga" : "Marcar paga"}</Text>
             </Pressable>
             <Pressable style={styles.deleteButton} onPress={() => handleDelete(b)}>
               <Text style={styles.deleteButtonText}>Excluir</Text>
@@ -158,39 +159,41 @@ function AddBillModal({ visible, onClose }: { visible: boolean; onClose: () => v
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  container: { flex: 1, padding: 20 },
-  center: { flex: 1, justifyContent: "center", alignItems: "center", padding: 24 },
-  deniedText: { color: "#888" },
-  title: { fontSize: 22, fontWeight: "700", marginBottom: 20 },
+  flex: { flex: 1, backgroundColor: colors.screenBg },
+  container: { flex: 1, padding: 20, backgroundColor: colors.screenBg },
+  center: { flex: 1, justifyContent: "center", alignItems: "center", padding: 24, backgroundColor: colors.screenBg },
+  deniedText: { color: colors.slate400 },
+  title: { fontSize: 22, fontWeight: "700", marginBottom: 20, color: colors.slate900 },
   row: {
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#eee",
-    borderRadius: 12,
+    borderColor: colors.slate200,
+    backgroundColor: colors.white,
+    borderRadius: 16,
     padding: 12,
     marginBottom: 8,
     gap: 8,
   },
-  rowOverdue: { borderColor: "#c0392b", backgroundColor: "#fdf0ef" },
-  rowTitle: { fontWeight: "600" },
-  rowSub: { color: "#888", fontSize: 12, marginTop: 2 },
-  emptyText: { color: "#888" },
-  smallButton: { backgroundColor: "#111", paddingVertical: 8, paddingHorizontal: 10, borderRadius: 8 },
-  smallButtonPaid: { backgroundColor: "#2e7d32" },
-  smallButtonText: { color: "#fff", fontSize: 12, fontWeight: "600" },
-  deleteButton: { paddingVertical: 8, paddingHorizontal: 6 },
-  deleteButtonText: { color: "#c0392b", fontSize: 12, fontWeight: "600" },
-  fab: { position: "absolute", right: 20, bottom: 24, backgroundColor: "#111", paddingVertical: 14, paddingHorizontal: 22, borderRadius: 30 },
-  fabText: { color: "#fff", fontWeight: "700", fontSize: 15 },
-  modalContainer: { flex: 1, padding: 20, paddingTop: 60 },
-  modalTitle: { fontSize: 22, fontWeight: "700", marginBottom: 20 },
-  label: { fontSize: 14, color: "#555", marginTop: 16, marginBottom: 6 },
-  input: { borderWidth: 1, borderColor: "#ccc", borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 16 },
+  rowOverdue: { borderColor: colors.red100, backgroundColor: colors.red50 },
+  rowTitle: { fontWeight: "600", color: colors.slate900 },
+  rowSub: { color: colors.slate500, fontSize: 12, marginTop: 2 },
+  emptyText: { color: colors.slate400 },
+  smallButton: { backgroundColor: colors.green100, paddingVertical: 8, paddingHorizontal: 10, borderRadius: 12 },
+  smallButtonPaid: { backgroundColor: colors.slate100 },
+  smallButtonText: { color: colors.green700, fontSize: 12, fontWeight: "700" },
+  smallButtonTextPaid: { color: colors.slate500 },
+  deleteButton: { backgroundColor: colors.red50, paddingVertical: 8, paddingHorizontal: 6, borderRadius: 12 },
+  deleteButtonText: { color: colors.red600, fontSize: 12, fontWeight: "600" },
+  fab: { position: "absolute", right: 20, bottom: 24, backgroundColor: colors.brand600, paddingVertical: 14, paddingHorizontal: 22, borderRadius: 30, shadowColor: colors.brand500, shadowOpacity: 0.3, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 4 },
+  fabText: { color: colors.white, fontWeight: "700", fontSize: 15 },
+  modalContainer: { flex: 1, padding: 20, paddingTop: 60, backgroundColor: colors.white },
+  modalTitle: { fontSize: 22, fontWeight: "700", marginBottom: 20, color: colors.slate900 },
+  label: { fontSize: 14, color: colors.slate600, marginTop: 16, marginBottom: 6 },
+  input: { borderWidth: 1, borderColor: colors.slate200, backgroundColor: colors.slate50, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 10, fontSize: 16, color: colors.slate900 },
   switchRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 16 },
-  submitButton: { backgroundColor: "#111", paddingVertical: 14, borderRadius: 10, alignItems: "center", marginTop: 28 },
-  submitText: { color: "#fff", fontWeight: "600", fontSize: 16 },
+  submitButton: { backgroundColor: colors.brand600, paddingVertical: 14, borderRadius: 16, alignItems: "center", marginTop: 28 },
+  submitText: { color: colors.white, fontWeight: "700", fontSize: 16 },
   cancelButton: { paddingVertical: 14, alignItems: "center" },
-  cancelText: { color: "#888" },
+  cancelText: { color: colors.slate400 },
 });

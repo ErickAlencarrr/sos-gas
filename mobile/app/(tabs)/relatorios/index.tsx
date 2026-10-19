@@ -5,6 +5,7 @@ import { useAuth } from "../../../lib/auth";
 import { useClosings, useFixOrphaned } from "../../../lib/queries";
 import { DailyClosing } from "../../../types";
 import { ApiError } from "../../../lib/api";
+import { colors } from "../../../lib/theme";
 
 function formatBRL(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -116,28 +117,29 @@ export default function RelatoriosScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
-  center: { flex: 1, justifyContent: "center", alignItems: "center", padding: 24 },
-  deniedText: { color: "#888" },
-  title: { fontSize: 22, fontWeight: "700", marginBottom: 16 },
+  container: { flex: 1, padding: 20, backgroundColor: colors.screenBg },
+  center: { flex: 1, justifyContent: "center", alignItems: "center", padding: 24, backgroundColor: colors.screenBg },
+  deniedText: { color: colors.slate400 },
+  title: { fontSize: 22, fontWeight: "700", marginBottom: 16, color: colors.slate900 },
   tabRow: { flexDirection: "row", gap: 8, marginBottom: 16 },
-  tab: { flex: 1, borderWidth: 1, borderColor: "#ccc", borderRadius: 10, paddingVertical: 10, alignItems: "center" },
-  tabActive: { backgroundColor: "#111", borderColor: "#111" },
-  tabText: { color: "#333", fontWeight: "600" },
-  tabTextActive: { color: "#fff" },
-  fixButton: { borderWidth: 1, borderColor: "#111", borderRadius: 10, paddingVertical: 10, alignItems: "center", marginBottom: 16 },
-  fixButtonText: { color: "#111", fontWeight: "600" },
+  tab: { flex: 1, borderWidth: 1, borderColor: colors.slate200, backgroundColor: colors.white, borderRadius: 12, paddingVertical: 10, alignItems: "center" },
+  tabActive: { backgroundColor: colors.brand600, borderColor: colors.brand600 },
+  tabText: { color: colors.slate600, fontWeight: "700" },
+  tabTextActive: { color: colors.white },
+  fixButton: { borderWidth: 1, borderColor: colors.brand600, borderRadius: 12, paddingVertical: 10, alignItems: "center", marginBottom: 16 },
+  fixButtonText: { color: colors.brand600, fontWeight: "700" },
   row: {
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#eee",
-    borderRadius: 12,
+    borderColor: colors.slate200,
+    backgroundColor: colors.white,
+    borderRadius: 16,
     padding: 14,
     marginBottom: 8,
   },
-  rowTitle: { fontWeight: "600" },
-  rowSub: { color: "#888", fontSize: 12, marginTop: 2 },
-  rowValue: { fontWeight: "700" },
-  emptyText: { color: "#888" },
+  rowTitle: { fontWeight: "600", color: colors.slate900 },
+  rowSub: { color: colors.slate500, fontSize: 12, marginTop: 2 },
+  rowValue: { fontWeight: "700", color: colors.slate900 },
+  emptyText: { color: colors.slate400 },
 });

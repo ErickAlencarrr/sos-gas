@@ -3,6 +3,7 @@ import { View, Text, TextInput, Pressable, StyleSheet, ScrollView, Modal, Alert 
 import { useAuth } from "../../lib/auth";
 import { useResetStock, useResetProducts, useResetHistory } from "../../lib/queries";
 import { ApiError } from "../../lib/api";
+import { colors } from "../../lib/theme";
 
 type DangerAction = {
   key: string;
@@ -129,26 +130,26 @@ function ConfirmModal({ action, onClose }: { action: DangerAction | null; onClos
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  container: { flex: 1, padding: 20 },
-  center: { flex: 1, justifyContent: "center", alignItems: "center", gap: 16, padding: 24 },
-  title: { fontSize: 22, fontWeight: "700", marginBottom: 12 },
-  sectionTitle: { fontSize: 14, fontWeight: "700", color: "#c0392b", marginTop: 8, marginBottom: 12 },
-  dangerCard: { borderWidth: 1, borderColor: "#f5c6c3", backgroundColor: "#fdf0ef", borderRadius: 12, padding: 16, marginBottom: 12 },
-  dangerTitle: { fontWeight: "700", marginBottom: 4 },
-  dangerDescription: { color: "#555", fontSize: 13, marginBottom: 12 },
-  dangerButton: { backgroundColor: "#c0392b", paddingVertical: 10, borderRadius: 8, alignItems: "center" },
-  dangerButtonText: { color: "#fff", fontWeight: "600" },
-  logoutButton: { backgroundColor: "#111", paddingVertical: 12, paddingHorizontal: 32, borderRadius: 10, alignItems: "center", marginTop: 24 },
-  logoutText: { color: "#fff", fontWeight: "600" },
-  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", padding: 24 },
-  card: { backgroundColor: "#fff", borderRadius: 16, padding: 20 },
-  cardTitle: { fontSize: 18, fontWeight: "700", marginBottom: 8 },
-  cardDescription: { color: "#555", fontSize: 13, marginBottom: 12 },
-  cardWarning: { color: "#c0392b", fontSize: 13, fontWeight: "600", marginBottom: 12 },
-  input: { borderWidth: 1, borderColor: "#ccc", borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 16, marginBottom: 16 },
-  confirmButton: { backgroundColor: "#c0392b", paddingVertical: 14, borderRadius: 10, alignItems: "center" },
-  confirmButtonText: { color: "#fff", fontWeight: "600", fontSize: 16 },
+  flex: { flex: 1, backgroundColor: colors.screenBg },
+  container: { flex: 1, padding: 20, backgroundColor: colors.screenBg },
+  center: { flex: 1, justifyContent: "center", alignItems: "center", gap: 16, padding: 24, backgroundColor: colors.screenBg },
+  title: { fontSize: 22, fontWeight: "700", marginBottom: 12, color: colors.slate900 },
+  sectionTitle: { fontSize: 13, fontWeight: "700", color: colors.red600, marginTop: 8, marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 },
+  dangerCard: { borderWidth: 1, borderColor: colors.red100, backgroundColor: colors.red50, borderRadius: 16, padding: 16, marginBottom: 12 },
+  dangerTitle: { fontWeight: "700", marginBottom: 4, color: colors.slate900 },
+  dangerDescription: { color: colors.slate600, fontSize: 13, marginBottom: 12 },
+  dangerButton: { backgroundColor: colors.red600, paddingVertical: 10, borderRadius: 12, alignItems: "center" },
+  dangerButtonText: { color: colors.white, fontWeight: "700" },
+  logoutButton: { backgroundColor: colors.slate900, paddingVertical: 12, paddingHorizontal: 32, borderRadius: 16, alignItems: "center", marginTop: 24 },
+  logoutText: { color: colors.white, fontWeight: "700" },
+  overlay: { flex: 1, backgroundColor: "rgba(15,23,42,0.5)", justifyContent: "center", padding: 24 },
+  card: { backgroundColor: colors.white, borderRadius: 20, padding: 20 },
+  cardTitle: { fontSize: 18, fontWeight: "700", marginBottom: 8, color: colors.slate900 },
+  cardDescription: { color: colors.slate600, fontSize: 13, marginBottom: 12 },
+  cardWarning: { color: colors.red600, fontSize: 13, fontWeight: "600", marginBottom: 12 },
+  input: { borderWidth: 1, borderColor: colors.slate200, backgroundColor: colors.slate50, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 10, fontSize: 16, marginBottom: 16, color: colors.slate900 },
+  confirmButton: { backgroundColor: colors.red600, paddingVertical: 14, borderRadius: 16, alignItems: "center" },
+  confirmButtonText: { color: colors.white, fontWeight: "700", fontSize: 16 },
   cancelButton: { paddingVertical: 14, alignItems: "center" },
-  cancelText: { color: "#888" },
+  cancelText: { color: colors.slate400 },
 });
