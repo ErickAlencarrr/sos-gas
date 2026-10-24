@@ -271,6 +271,21 @@ export function useFixOrphaned() {
   });
 }
 
+export type ProductSalesReport = {
+  from: string;
+  to: string;
+  products: { productId: string; productName: string; totalQuantity: number; totalRevenue: number }[];
+  totalQuantity: number;
+  totalRevenue: number;
+};
+
+export function useProductSales(from: string, to: string) {
+  return useQuery({
+    queryKey: ["product-sales", from, to],
+    queryFn: () => apiFetch<ProductSalesReport>(`/api/reports/by-product?from=${from}&to=${to}`),
+  });
+}
+
 // ---------- Usuários ----------
 
 export function useUsers() {

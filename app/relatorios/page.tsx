@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { FileText, Wallet, CalendarDays, ArrowRight, BarChart3, CalendarRange, RefreshCcw } from "lucide-react";
+import { FileText, Wallet, CalendarDays, ArrowRight, BarChart3, CalendarRange, RefreshCcw, Package } from "lucide-react";
 
 type DailyClosing = {
   id: string;
@@ -18,13 +18,73 @@ type DailyClosing = {
   createdAt: string;
 };
 
+type ProductSalesEntry = {
+  productId: string;
+  productName: string;
+  totalQuantity: number;
+  totalRevenue: number;
+};
+
+function todayISO() {
+  return new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+}
+
+function firstDayOfMonthISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
+}
+
 export default function RelatoriosPage() {
   const [closings, setClosings] = useState<DailyClosing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFixing, setIsFixing] = useState(false);
-  const [viewMode, setViewMode] = useState<"DAILY" | "WEEKLY" | "MONTHLY">("DAILY");
+  const [viewMode, setViewMode] = useState<"DAILY" | "WEEKLY" | "MONTHLY" | "PRODUCTS">("DAILY");
   const router = useRouter();
   const { data: session } = useSession();
+
+  const [productFrom, setProductFrom] = useState(firstDayOfMonthISO());
+  const [productTo, setProductTo] = useState(todayISO());
+  const [productSales, setProductSales] = useState<ProductSalesEntry[]>([]);
+  const [productTotals, setProductTotals] = useState({ totalQuantity: 0, totalRevenue: 0 });
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+
+  const fetchProductSales = async (from: string, to: string) => {
+    setIsLoadingProducts(true);
+    try {
+      const res = await fetch(`/api/reports/by-product?from=${from}&to=${to}`);
+      if (res.ok) {
+        const data = await res.json();
+        setProductSales(data.products || []);
+        setProductTotals({ totalQuantity: data.totalQuantity || 0, totalRevenue: data.totalRevenue || 0 });
+      }
+    } catch (error) {
+      console.error("Erro ao buscar vendas por produto", error);
+    } finally {
+      setIsLoadingProducts(false);
+    }
+  };
+
+  useEffect(() => {
+    if (viewMode === "PRODUCTS") fetchProductSales(productFrom, productTo);
+  }, [viewMode]);
+
+  function applyProductPreset(preset: "today" | "week" | "month" | "year") {
+    const now = new Date();
+    let from = todayISO();
+    const to = todayISO();
+    if (preset === "week") {
+      const d = new Date(now);
+      d.setDate(d.getDate() - 6);
+      from = d.toLocaleDateString('en-CA');
+    } else if (preset === "month") {
+      from = firstDayOfMonthISO();
+    } else if (preset === "year") {
+      from = `${now.getFullYear()}-01-01`;
+    }
+    setProductFrom(from);
+    setProductTo(to);
+    fetchProductSales(from, to);
+  }
 
   const fetchClosings = async () => {
     try {
@@ -140,15 +200,93 @@ export default function RelatoriosPage() {
         >
           <CalendarRange className="w-4 h-4" /> Semanal
         </button>
-        <button 
+        <button
           onClick={() => setViewMode("MONTHLY")}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold transition-all ${viewMode === "MONTHLY" ? "bg-white dark:bg-slate-900 shadow-sm text-brand-600 dark:text-brand-400" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
         >
           <BarChart3 className="w-4 h-4" /> Mensal
         </button>
+        <button
+          onClick={() => setViewMode("PRODUCTS")}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold transition-all ${viewMode === "PRODUCTS" ? "bg-white dark:bg-slate-900 shadow-sm text-brand-600 dark:text-brand-400" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+        >
+          <Package className="w-4 h-4" /> Produtos
+        </button>
       </div>
 
+      {viewMode === "PRODUCTS" && (
+        <div className="mb-8">
+          <div className="flex flex-wrap items-end gap-3 mb-4">
+            <div>
+              <label className="text-xs font-bold text-slate-500 block mb-1">De</label>
+              <input
+                type="date"
+                value={productFrom}
+                onChange={(e) => setProductFrom(e.target.value)}
+                className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-medium"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-slate-500 block mb-1">Até</label>
+              <input
+                type="date"
+                value={productTo}
+                onChange={(e) => setProductTo(e.target.value)}
+                className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-medium"
+              />
+            </div>
+            <button
+              onClick={() => fetchProductSales(productFrom, productTo)}
+              className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-sm font-bold transition-colors"
+            >
+              Buscar
+            </button>
+            <div className="flex gap-2 ml-auto">
+              <button onClick={() => applyProductPreset("today")} className="px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700">Hoje</button>
+              <button onClick={() => applyProductPreset("week")} className="px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700">7 dias</button>
+              <button onClick={() => applyProductPreset("month")} className="px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700">Este mês</button>
+              <button onClick={() => applyProductPreset("year")} className="px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700">Este ano</button>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50 dark:bg-slate-950/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-widest border-b border-slate-200 dark:border-slate-800">
+                  <th className="p-5 font-bold">Produto</th>
+                  <th className="p-5 font-bold text-center">Quantidade vendida</th>
+                  <th className="p-5 font-bold text-right">Faturamento</th>
+                </tr>
+              </thead>
+              <tbody className="text-sm">
+                {isLoadingProducts ? (
+                  <tr><td colSpan={3} className="p-8 text-center text-slate-400">Carregando...</td></tr>
+                ) : productSales.length === 0 ? (
+                  <tr><td colSpan={3} className="p-8 text-center text-slate-400">Nenhuma venda no período.</td></tr>
+                ) : (
+                  <>
+                    {productSales.map((p) => (
+                      <tr key={p.productId} className="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                        <td className="p-5 font-bold text-slate-800 dark:text-slate-200">{p.productName}</td>
+                        <td className="p-5 font-black text-center text-lg text-brand-700 dark:text-brand-400">{p.totalQuantity} un</td>
+                        <td className="p-5 font-bold text-right text-slate-600 dark:text-slate-300">R$ {p.totalRevenue.toFixed(2).replace('.', ',')}</td>
+                      </tr>
+                    ))}
+                    <tr className="bg-slate-50 dark:bg-slate-950/50 font-black">
+                      <td className="p-5 text-slate-800 dark:text-white">Total</td>
+                      <td className="p-5 text-center text-brand-700 dark:text-brand-400">{productTotals.totalQuantity} un</td>
+                      <td className="p-5 text-right text-slate-800 dark:text-white">R$ {productTotals.totalRevenue.toFixed(2).replace('.', ',')}</td>
+                    </tr>
+                  </>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* Versão Desktop (Tabela) */}
+      {viewMode !== "PRODUCTS" && (
       <div className="hidden md:block bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
         <table className="w-full text-left border-collapse">
           <thead>
@@ -215,8 +353,10 @@ export default function RelatoriosPage() {
           </tbody>
         </table>
       </div>
+      )}
 
       {/* Versão Mobile (Cards) */}
+      {viewMode !== "PRODUCTS" && (
       <div className="md:hidden space-y-4">
         {isLoading ? (
           <div className="text-center text-slate-400 py-8">Carregando fechamentos...</div>
@@ -281,6 +421,7 @@ export default function RelatoriosPage() {
           ))
         )}
       </div>
+      )}
     </main>
   );
 }
