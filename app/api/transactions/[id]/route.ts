@@ -71,6 +71,7 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
           cardPrice: paymentMethod === 'SPLIT' ? parseFloat(splitValues?.card || "0") : 0,
           clientPrice: newClientValue,
           returnedEmpty,
+          customerName: typeof body.customerName === 'string' && body.customerName.trim() ? body.customerName.trim().slice(0, 100) : null,
           customerId: customerId || null
         }
       });

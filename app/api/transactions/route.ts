@@ -40,6 +40,7 @@ export async function POST(req: Request) {
           returnedEmpty: type === 'OUT' ? (returnedEmpty !== undefined ? returnedEmpty : true) : null,
           isPendingPickup: type === 'OUT' ? (isPendingPickup === true) : false,
           emptyQuantity: type === 'IN' ? (emptyQuantity !== undefined ? parseInt(emptyQuantity) : parseInt(quantity)) : null,
+          customerName: type === 'OUT' && typeof body.customerName === 'string' && body.customerName.trim() ? body.customerName.trim().slice(0, 100) : null,
           customerId: (paymentMethod === 'CLIENT' || (paymentMethod === 'SPLIT' && body.splitValues?.client > 0)) && body.customerId ? body.customerId : null
         },
         include: { product: true }

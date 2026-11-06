@@ -66,6 +66,7 @@ export default function Home() {
   
   // Campos de Cliente
   const [selectedCustomer, setSelectedCustomer] = useState("");
+  const [saleCustomerName, setSaleCustomerName] = useState(""); // nome opcional do comprador (avulso)
   const [newCustomerName, setNewCustomerName] = useState("");
   const [isCreatingCustomer, setIsCreatingCustomer] = useState(false);
   
@@ -116,6 +117,7 @@ export default function Home() {
       setSplitValues({ cash: "", pix: "", card: "", client: "" });
     }
     
+    setSaleCustomerName(tx.customerName || "");
     if (tx.customerId) {
       setSelectedCustomer(tx.customerId);
     } else {
@@ -210,6 +212,7 @@ export default function Home() {
     setReturnedEmpty(true);
     setIsPendingPickup(false);
     setSelectedCustomer("");
+    setSaleCustomerName("");
     setNewCustomerName("");
     setIsCreatingCustomer(false);
     if (products.length > 0) setSelectedProduct(products[0].id);
@@ -277,6 +280,7 @@ export default function Home() {
         splitValues: isSplitPayment ? { cash: unmaskedCash, pix: unmaskedPix, card: unmaskedCard, client: unmaskedClient } : undefined,
         returnedEmpty: returnedEmpty,
         isPendingPickup: isPendingPickup,
+        customerName: saleCustomerName.trim() || null,
         customerId: (isSplitPayment && parseFloat(unmaskedClient) > 0) || (!isSplitPayment && paymentMethod === 'CLIENT') ? selectedCustomer : null
       };
 
@@ -454,6 +458,7 @@ export default function Home() {
                       <p className="text-xs text-slate-500 font-medium">
                         {tx.quantity} un · R$ {tx.price?.toFixed(2).replace('.', ',')}
                       </p>
+                      {tx.customerName && <p className="text-xs text-slate-600 dark:text-slate-300 font-bold truncate">{tx.customerName}</p>}
                       <p className="text-[10px] text-amber-600 dark:text-amber-400 font-bold mt-0.5">
                         {tx.paymentMethod === 'PIX' ? 'PIX' : tx.paymentMethod === 'CASH' ? 'Dinheiro' : tx.paymentMethod === 'CARD' ? 'Cartão' : tx.paymentMethod === 'SPLIT' ? 'Múltiplo' : tx.paymentMethod} · {new Date(tx.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                       </p>
@@ -574,6 +579,22 @@ export default function Home() {
                     <PlusCircle className="w-8 h-8" />
                   </button>
                 </div>
+              </div>
+
+              <div>
+                <label htmlFor="sale-customer-name" className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                  Nome do cliente <span className="font-medium text-slate-400">(opcional)</span>
+                </label>
+                <input
+                  id="sale-customer-name"
+                  type="text"
+                  maxLength={100}
+                  autoComplete="off"
+                  placeholder="Ex: João da padaria"
+                  className="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-base font-medium outline-none focus:ring-2 focus:ring-brand-500"
+                  value={saleCustomerName}
+                  onChange={(e) => setSaleCustomerName(e.target.value)}
+                />
               </div>
 
               {/* OPÇÕES EXTRAS PARA VENDA (OUT) */}
@@ -840,6 +861,7 @@ export default function Home() {
                             {tx.paymentMethod === 'CLIENT' && tx.customer && ` • Cliente: ${tx.customer.name}`}
                             {tx.paymentMethod === 'SPLIT' && ` • Pagamento Múltiplo`}
                           </span>
+                          {tx.customerName && <span className="font-bold text-slate-600 dark:text-slate-300">{tx.customerName}</span>}
                           {tx.paymentMethod === 'SPLIT' && (
                             <span className="text-[10px] text-slate-400 font-bold bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg inline-block w-fit mt-1">
                               {tx.cashPrice > 0 && `Dinheiro: R$ ${tx.cashPrice.toFixed(2).replace('.',',')} | `}

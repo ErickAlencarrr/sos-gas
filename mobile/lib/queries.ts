@@ -66,6 +66,7 @@ export type SellPayload = {
   price: number;
   paymentMethod: "PIX" | "CASH" | "CARD" | "CLIENT" | "SPLIT";
   customerId?: string;
+  customerName?: string;
   splitValues?: { cash: string; pix: string; card: string; client: string };
   returnedEmpty: boolean;
   isPendingPickup: boolean;

@@ -122,7 +122,7 @@ export default function DashboardScreen() {
                   <Text style={styles.listItemTitle}>
                     {tx.quantity}x {tx.product?.name}
                   </Text>
-                  <Text style={styles.listItemSub}>{tx.customer?.name ?? "Sem cliente"}</Text>
+                  <Text style={styles.listItemSub}>{tx.customer?.name ?? tx.customerName ?? "Sem cliente"}</Text>
                 </View>
                 <Pressable style={styles.smallButton} onPress={() => handleConfirmPickup(tx.id)}>
                   <Text style={styles.smallButtonText}>Confirmar retirada</Text>

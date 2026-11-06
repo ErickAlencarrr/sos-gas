@@ -37,6 +37,7 @@ export interface Transaction {
   product?: Product;
   customerId?: string | null;
   customer?: Customer | null;
+  customerName?: string | null;
   type: TransactionType;
   quantity: number;
 

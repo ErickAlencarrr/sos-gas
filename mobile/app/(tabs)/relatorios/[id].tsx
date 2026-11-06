@@ -68,7 +68,7 @@ export default function FechamentoDetailScreen() {
               {tx.quantity}x {tx.product?.name}
             </Text>
             <Text style={styles.rowSub}>
-              {tx.paymentMethod} {tx.customer ? `· ${tx.customer.name}` : ""}
+              {tx.paymentMethod} {tx.customer ? `· ${tx.customer.name}` : tx.customerName ? `· ${tx.customerName}` : ""}
             </Text>
           </View>
           <Text style={styles.rowValue}>{formatBRL(tx.price ?? 0)}</Text>

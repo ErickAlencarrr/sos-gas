@@ -36,6 +36,7 @@ export default function SellModal({
   const [price, setPrice] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("PIX");
   const [customerId, setCustomerId] = useState<string | null>(null);
+  const [customerName, setCustomerName] = useState("");
   const [returnedEmpty, setReturnedEmpty] = useState(true);
   const [isPendingPickup, setIsPendingPickup] = useState(false);
 
@@ -48,6 +49,7 @@ export default function SellModal({
     setPrice("");
     setPaymentMethod("PIX");
     setCustomerId(null);
+    setCustomerName("");
     setReturnedEmpty(true);
     setIsPendingPickup(false);
   }
@@ -85,6 +87,7 @@ export default function SellModal({
         price: priceNum,
         paymentMethod,
         customerId: paymentMethod === "CLIENT" ? customerId! : undefined,
+        customerName: customerName.trim() || undefined,
         returnedEmpty,
         isPendingPickup,
       });
@@ -127,6 +130,16 @@ export default function SellModal({
           value={price}
           onChangeText={setPrice}
           placeholder="0,00"
+        />
+
+        <Text style={styles.label}>Nome do cliente (opcional)</Text>
+        <TextInput
+          style={styles.input}
+          value={customerName}
+          onChangeText={setCustomerName}
+          placeholder="Ex: João da padaria"
+          maxLength={100}
+          autoCapitalize="words"
         />
 
         <Text style={styles.label}>Forma de pagamento</Text>

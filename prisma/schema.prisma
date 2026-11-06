@@ -72,6 +72,7 @@ model Transaction {
   
   customerId    String?         // Opcional, usado quando paymentMethod for CLIENT
   customer      Customer?       @relation(fields: [customerId], references: [id])
+  customerName  String?         // Opcional: nome livre de quem comprou (cliente avulso, sem cadastro)
 
   type          TransactionType
   quantity      Int
